@@ -4,43 +4,79 @@ import static org.junit.Assert.*;
 
 public class ArrayDequeTest {
     @Test
-    public void getNextFrontAndLastTest() {
-        ArrayDeque<Integer> a = new ArrayDeque<>();
-        // 4 5 3 2 9 8 0 7
-        a.addLast(9);
-        a.addLast(8);
-        a.addLast(0);
-        a.addLast(7);
-        a.addFirst(2);
-        a.addFirst(3);
-        a.addFirst(5);
-        a.addFirst(4);
-        int x1 = a.get(2);
-        int x2 = a.get(4);
-        assertEquals(3, x1);
-        assertEquals(9, x2);
-        a.addLast(15);
-        a.addLast(15);
-        a.addLast(15);
-        a.addLast(15);
-        int y1 = a.removeLast();
-        int y2 = a.removeLast();
-        assertEquals(y1, 15);
-        assertEquals(y2, 15);
-        int y3 = a.removeFirst();
-        assertEquals(y3, 4);
-        a.printDeque();
+    public void addIsEmptySizeTest() {
+        ArrayDeque<String> lld2 = new ArrayDeque<>();
+        assertTrue("new deque should be empty", lld2.isEmpty());
+        lld2.addFirst("front");
+        
+        assertEquals(1, lld2.size());
+        assertFalse("lld2 should contain 2 item", lld2.isEmpty());
+
+        lld2.addLast("middle");
+        assertEquals(2, lld2.size());
+
+        lld2.addLast("back");
+        assertEquals(3, lld2.size());
+
+        System.out.println("Printing out deque: ");
+        lld2.printDeque();
+    }
+    
+    @Test
+    public void addRemoveTest() {
+        ArrayDeque<Integer> lld2 = new ArrayDeque<>();
+        assertTrue("lld2 should be empty", lld2.isEmpty());
+        
+        lld2.addFirst(100);
+        assertFalse("lld2 should be empty", lld2.isEmpty());
+        
+        lld2.removeFirst();
+        assertTrue("lld2 should be empty", lld2.isEmpty());
+    }
+    
+    @Test
+    public void removeEmptyTest() {
+        ArrayDeque<Integer> lld2 = new ArrayDeque<>();
+        lld2.addFirst(100);
+
+        lld2.removeFirst();
+        lld2.removeFirst();
+        lld2.removeFirst();
+        lld2.removeFirst();
+        
+        int size = lld2.size();
+        assertEquals("Bad size, return: " + size,0, size);
+    }
+    
+    @Test
+    public void multipleParamTest() {
+        ArrayDeque<String> lld1 = new ArrayDeque<>();
+        ArrayDeque<Double> lld2 = new ArrayDeque<>();
+        ArrayDeque<Boolean> lld3 = new ArrayDeque<>();
+        
+        lld1.addFirst("string");
+        lld2.addFirst(3.14159);
+        lld3.addFirst(true);
+        
+        String s = lld1.removeFirst();
+        double d = lld2.removeFirst();
+        boolean b = lld3.removeFirst();
     }
     @Test
-    public void isUsageTest() {
-        ArrayDeque<Integer> a = new ArrayDeque<>();
-        for (int i = 0; i < 1000; i++) {
-            a.addLast(i);
+    public void emptyNullReturnTest() {
+        ArrayDeque<Integer> lld1 = new ArrayDeque<>();
+        
+        assertEquals("Should return null, when removeFirst is called on an empty Deque.", null, lld1.removeFirst());
+        assertEquals("Should return null, when removeFirst is called on an empty Deque.", null, lld1.removeLast());
+    }
+    @Test
+    public void bigADequeTest() {
+        ArrayDeque<Integer> lld1 = new ArrayDeque<>();
+        for (int i = 0; i < 100000; i++) {
+            lld1.addLast(i);
         }
-        for (int i = 0; i < 980; i++) {
-            a.removeFirst();
+        for (int i = 0; i < 80000; i++) {
+            assertEquals("Should have the same value", i, (int) lld1.removeFirst());
         }
-        a.printDeque();
-        System.out.println(a.itemLength());
     }
 }

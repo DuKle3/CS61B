@@ -33,21 +33,15 @@ public class ArrayDeque<T> {
     /** Resize the arrayDeque. */
     private void resize(int capacity) {
         T[] a = (T[]) new Object[capacity];
-        System.arraycopy(items, nextLast, a, 0, itemLength() - nextLast);
-        System.arraycopy(items, 0, a, itemLength() - nextLast, nextFront + 1);
-        nextFront = capacity - 1;
-        nextLast = size;
-        items = a;
-    }
-    private void resizeSmaller(int capacity) {
-        T[] a = (T[]) new Object[capacity];
-        nextFront = moveRight(nextFront);
         int index = 0;
+        nextFront = moveRight(nextFront);
+        nextLast = moveLeft(nextLast);
         while (nextFront != nextLast) {
             a[index] = items[nextFront];
             index += 1;
             nextFront = moveRight(nextFront);
         }
+        a[index] = items[nextFront];
         nextFront = capacity - 1;
         nextLast = size;
         items = a;
@@ -81,8 +75,8 @@ public class ArrayDeque<T> {
         T removeItem = items[nextFront];
         items[nextFront] = null;
         size -= 1;
-        if (isUsageLow()) {
-            resizeSmaller(items.length / 4);
+        if (isUsageLow() && size > 0) {
+            resize(items.length / 4);
         }
         return removeItem;
     }
@@ -95,8 +89,8 @@ public class ArrayDeque<T> {
         T removeItem = items[nextLast];
         items[nextLast] = null;
         size -= 1;
-        if (isUsageLow()) {
-            resizeSmaller(items.length / 4);
+        if (isUsageLow() && size > 0) {
+            resize(items.length / 4);
         }
         return removeItem;
     }
@@ -118,7 +112,7 @@ public class ArrayDeque<T> {
     }
     /** Return true if deque is empty */
     public boolean isEmpty() {
-        return (nextFront == 0 && nextLast == 1);
+        return items[moveRight(nextFront)] == null;
     }
     public T get(int index) {
         if (index > size) {
