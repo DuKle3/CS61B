@@ -23,5 +23,25 @@ public class TimeAList {
 
     public static void timeAListConstruction() {
         // TODO: YOUR CODE HERE
+        /* Create the AList */
+        /* 1000 2000 4000 8000 16000 --> 128000 */
+        AList<Integer> N = new AList<>();
+        AList<Integer> Ns = new AList<>();
+        AList<Double> times = new AList<>();
+        AList<Integer> opCounts = new AList<>();
+        Stopwatch sw = new Stopwatch();
+        int ops = 0;
+        int power = 0;
+        for (int i = 0; i <= 1280000; i++) {
+            N.addLast(i);
+            ops += 1;
+            if (N.size() == Math.pow(2, power) * 1000) {
+                Ns.addLast(N.size());
+                times.addLast(sw.elapsedTime());
+                opCounts.addLast(ops);
+                power += 1;
+            }
+        }
+        printTimingTable(Ns, times, opCounts);
     }
 }
