@@ -8,8 +8,8 @@ public class TestArrayDequeEC {
     public void addMethodAndRemoveMethod() {
         ArrayDequeSolution<Integer> sol = new ArrayDequeSolution<>();
         StudentArrayDeque<Integer> student = new StudentArrayDeque<>();
-        String methodCalled = "\n";
-        for (int i = 0; i < 100; i++) {
+        String methodCalled = "";
+        for (int i = 0; i < 10000; i++) {
             int operationNumber = StdRandom.uniform(0, 4);
             if (operationNumber == 0) {
                 int randVal = StdRandom.uniform(0, 100);
