@@ -1,6 +1,6 @@
 package deque;
 
-public class ArrayDeque<T> {
+public class ArrayDeque<T> implements Deque<T> {
     private T[] items;
     private int size;
     private int nextFront;
@@ -111,9 +111,9 @@ public class ArrayDeque<T> {
         System.out.println(" ");
     }
     /** Return true if deque is empty */
-    public boolean isEmpty() {
-        return items[moveRight(nextFront)] == null;
-    }
+    //    public boolean isEmpty() {
+    //        return items[moveRight(nextFront)] == null;
+    //    }
     public T get(int index) {
         if (index > size) {
             return null;
