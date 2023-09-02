@@ -1,12 +1,14 @@
 package deque;
 
-public class LinkedListDeque<T> implements Deque<T> {
+import java.util.Iterator;
+
+public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     private int size;
     private Node sentinel;
     private class Node {
-        public T item;
-        public Node next;
-        public Node prev;
+        private T item;
+        private Node next;
+        private Node prev;
 
         public Node(T i, Node p, Node n) {
             item = i;
@@ -73,7 +75,7 @@ public class LinkedListDeque<T> implements Deque<T> {
         if (this.isEmpty()) {
             return null;
         }
-        size -=1;
+        size -= 1;
         T lastItem = sentinel.prev.item;
         sentinel.prev = sentinel.prev.prev;
         sentinel.prev.next = sentinel;
@@ -91,7 +93,7 @@ public class LinkedListDeque<T> implements Deque<T> {
         }
         return p.item;
     }
-    private T getRecursiveHelper(Node p, int index){
+    private T getRecursiveHelper(Node p, int index) {
         if (index == 0) {
             return p.item;
         }
@@ -102,5 +104,35 @@ public class LinkedListDeque<T> implements Deque<T> {
             return null;
         }
         return getRecursiveHelper(sentinel.next, index);
+    }
+    public Iterator<T> iterator() {
+        return new LinkedListDequeIterator();
+    }
+    private class LinkedListDequeIterator implements Iterator<T> {
+        private int position;
+        public LinkedListDequeIterator() {
+            position = 0;
+        }
+        public boolean hasNext() {
+            return position < size;
+        }
+        public T next() {
+            T returnItem = get(position);
+            position += 1;
+            return returnItem;
+        }
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) { return true; }
+        if (o instanceof LinkedListDeque olld) {
+            for (int i = 0; i < this.size; i++) {
+                if (!this.get(i).equals(olld.get(i))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }
