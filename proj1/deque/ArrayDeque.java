@@ -65,7 +65,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         size += 1;
         nextFront = moveLeft(nextFront);
     }
-    public boolean isUsageLow() {
+    private boolean isUsageLow() {
         return size < (items.length / 4);
     }
     /** Remove the returns the item at the front of the deque. */
@@ -100,10 +100,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     public int size() {
         return size;
     }
-    /** Return the length of the items. */
-    public int itemLength() {
-        return items.length;
-    }
+
     /** Print the deque. */
     public void printDeque() {
         for (int i = 0; i < size; i++) {
@@ -129,7 +126,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private class ArrayDequeIterator implements Iterator<T> {
         private int position;
-        public ArrayDequeIterator() {
+        ArrayDequeIterator() {
             position = 0;
         }
         public boolean hasNext() {

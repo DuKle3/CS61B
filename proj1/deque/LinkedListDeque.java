@@ -10,7 +10,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         private Node next;
         private Node prev;
 
-        public Node(T i, Node p, Node n) {
+        Node(T i, Node p, Node n) {
             item = i;
             prev = p;
             next = n;
@@ -110,7 +110,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     }
     private class LinkedListDequeIterator implements Iterator<T> {
         private int position;
-        public LinkedListDequeIterator() {
+        LinkedListDequeIterator() {
             position = 0;
         }
         public boolean hasNext() {
