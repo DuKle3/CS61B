@@ -1,5 +1,8 @@
 package gitlet;
 
+import com.sun.jdi.connect.Connector;
+import edu.princeton.cs.algs4.StdOut;
+
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author TODO
  */
@@ -9,16 +12,55 @@ public class Main {
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
     public static void main(String[] args) {
-        // TODO: what if args is empty?
+        if (args.length == 0) {
+            System.out.println("Please enter a command.");
+            System.exit(0);
+        }
         String firstArg = args[0];
         switch(firstArg) {
             case "init":
-                // TODO: handle the `init` command
+                ArgumentCheck.initArgumentCheck(args);
+                Repository.init();
                 break;
             case "add":
-                // TODO: handle the `add [filename]` command
+                ArgumentCheck.argumentCheck(args, 2);
+                String addFileName = args[1];
+                Repository.add(addFileName);
+                break;
+            case "commit":
+                ArgumentCheck.argumentCheck(args, 2);
+                Repository.commit(args);
+                break;
+            case "rm":
+                ArgumentCheck.argumentCheck(args, 2);
+                String removeFileName = args[1];
+                Repository.rm(removeFileName);
+                break;
+            case "log":
+                ArgumentCheck.argumentCheck(args, 1);
+                Repository.log();
+                break;
+            case "global-log":
+                ArgumentCheck.argumentCheck(args, 1);
+                Repository.globalLog();
+                break;
+            case "find":
+                ArgumentCheck.argumentCheck(args, 2);
+                String message = args[1];
+                Repository.find(message);
+                break;
+            case "status":
+                ArgumentCheck.argumentCheck(args, 1);
+                Repository.status();
+                break;
+            case "checkout":
+                ArgumentCheck.checkoutArgument(args);
+                Repository.checkout(args);
                 break;
             // TODO: FILL THE REST IN
+            default:
+                System.out.println("No command with that name exist.");
+                break;
         }
     }
 }

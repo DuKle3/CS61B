@@ -3,24 +3,74 @@
 **Name**:
 
 ## Classes and Data Structures
+### Data Structures 
 
-### Class 1
+```
+.gitlet 
+|
+|-- objects 
+|     |-- commits
+|     |-- blobs
+|
+|-- HEAD
+|-- addStage
+|-- removeStage
+|-- refs 
+|     |-- heads
+|
+|-- staging
+|     |-- addedBlobs
+|     |-- ...
+```
+
+### Repository
+```
+init
+...
+TODO:
+```
 
 #### Fields
 
-1. Field 1
-2. Field 2
+### Commit 
+#### Instance Variables
+```
+private String id;
+
+private String message;
+
+private List<String> parentCommits;
+
+private Date date;
+
+private Map<String, String> blobs;
+```
+#### Instance Methods
+```
+TODO:
+```
+### Blob 
+#### Instance Variables
+```
+private byte[] content;
+
+private String id;
+
+private String fileName;
+
+private String filePath;
+```
+#### Instance Methods
+```
+TODO:
+```
+### addStage 
+### removeStage
+### Directory
 
 
-### Class 2
-
-#### Fields
-
-1. Field 1
-2. Field 2
 
 
 ## Algorithms
 
 ## Persistence
-
