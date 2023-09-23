@@ -128,11 +128,13 @@ public class Repository {
         RemoveStage removedStage = Utils.readObject(removeStage, RemoveStage.class);
         Commit currentCommit = getCurrentCommit();
         if (stagingArea.contain(removeFileName)) {
-            stagingArea.remove(removeFileName);
+            stagingArea.removeStagingArea(removeFileName);
+            stagingArea.save();
         }
         else if (currentCommit.contain(removeFileName)) {
             String removeFileId = currentCommit.getBlobs().get(removeFileName);
             removedStage.addRemoveStage(removeFileName, removeFileId);
+            removedStage.save();
         }
         else {
             System.out.println("No reason to remove the file.");
@@ -146,7 +148,7 @@ public class Repository {
      * @param args
      */
     public static void commit(String[] args) {
-        if (args.length == 1) {
+        if (args.length == 1 || args[1].isEmpty()) {
             System.out.println("Please enter a commit message.");
             System.exit(0);
         }
@@ -309,6 +311,7 @@ public class Repository {
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
         // a. modified
+        System.out.println();
     }
     private static void modificationStatus(String fileName) {
         System.out.println(fileName + "(modified)");
@@ -318,6 +321,7 @@ public class Repository {
     }
     private static void untrackedFileStatus() {
         System.out.println("=== Untracked Files ===");
+        System.out.println();
     }
 
     /** Checkout.
@@ -347,11 +351,8 @@ public class Repository {
     /** Take the version of the file exist in the head Commit, and put it in the working directory. */
     private static void checkoutHeadFile(String fileName) {
         Commit currentCommit = getCurrentCommit();
-        if (!currentCommit.contain(fileName)) {
-            System.out.println("File does not exist in that commit.");
-            System.exit(0);
-        }
         String blobHashCode = currentCommit.getBlobs().get(fileName);
+        checkFileExistInCommit(currentCommit, fileName);
         checkoutFile(blobHashCode);
     }
     /** Take the version of the file exist in the commit with the given id. */
@@ -363,6 +364,7 @@ public class Repository {
         }
         Commit givenCommit = Commit.readFromFile(commitHashCode);
         String blobHashCode = givenCommit.getBlobs().get(fileName);
+        checkFileExistInCommit(givenCommit, fileName);
         checkoutFile(blobHashCode);
     }
     /** Takes all files in the commit at the head of the given branch, and puts them in the working directory
@@ -382,23 +384,33 @@ public class Repository {
             System.exit(0);
         }
 
-        String checkoutCommitHashCode = Utils.readContentsAsString(branchFile);
-        Commit checkoutCommit = Commit.readFromFile(checkoutCommitHashCode);
+        String branchCommitHashCode = Utils.readContentsAsString(branchFile);
+        Commit branchCommit = Commit.readFromFile(branchCommitHashCode);
 
         Commit currentCommit = getCurrentCommit();
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
-        // Compare
+
+        // file is untracked in the current branch and would be overwritten by the checkout.
+        // 1. branch.contain
+        // 2. current.notContain
+        // file is tracked in the current branch and not present in the checked-out branch are deleted.
         for (String fileName : fileNames) {
-            if (!currentCommit.contain(fileName) && checkoutCommit.contain(fileName)) {
+            if (!currentCommit.contain(fileName) && branchCommit.contain(fileName)) {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 System.exit(0);
+            } else if (currentCommit.contain(fileName) && !branchCommit.contain(fileName)) {
+                File file = join(CWD, fileName);
+                file.delete();
             }
         }
-        checkoutCommit(checkoutCommitHashCode);
         stagingArea.clean();
         stagingArea.save();
+        checkoutCommit(branchCommitHashCode);
+        changeActiveBranch(branchName);
     }
+
+
     /** Checkout all the files with the given commitHashCode. */
     private static void checkoutCommit(String commitHashCode) {
         Commit commit = Commit.readFromFile(commitHashCode);
@@ -413,6 +425,12 @@ public class Repository {
         File checkoutFile = join(CWD, fileBlob.getFileName());
         Utils.writeContents(checkoutFile, fileBlob.getContent());
     }
+    private static void checkFileExistInCommit(Commit commit, String fileName) {
+        if (!commit.contain(fileName)) {
+            System.out.println("File does not exist in that commit.");
+            System.exit(0);
+        }
+    }
 
     /** Create new branch with the given name, and points it at the current head commit. */
     public static void branch(String[] args) {
@@ -424,7 +442,6 @@ public class Repository {
         } else {
             Commit currentCommit = getCurrentCommit();
             Utils.writeContents(branchFile, currentCommit.getHashCode());
-            Utils.writeContents(HEAD, branchName);
         }
     }
 
@@ -524,13 +541,17 @@ public class Repository {
         Utils.writeContents(activeBranchFile, commitHashCode);
     }
 
+    /** Change the active branch to the given branchName. */
+    private static void changeActiveBranch(String branchName) {
+        Utils.writeContents(HEAD, branchName);
+    }
+
     /** Check the given branchName exist, if not, print out error message and exit. */
-    private static boolean checkBranchExist(String branchName) {
+    private static void checkBranchExist(String branchName) {
         File branchFile = join(Directory.HEADS_DIR, branchName);
         if (!branchFile.exists()) {
             System.out.println("A branch with that name does not exist.");
             System.exit(0);
         }
-        return true;
     }
 }

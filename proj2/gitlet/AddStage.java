@@ -30,7 +30,7 @@ public class AddStage implements Serializable {
         Utils.writeObject(Repository.addStage, this);
     }
 
-    /** Remove the file in the staging Area.
+    /** Remove the file in the staging Area and directory.
      *  1. remove the Blob in the directory.
      *  2. update the addStage.
      */
@@ -38,6 +38,12 @@ public class AddStage implements Serializable {
         String hashCode = addStage.get(fileName);
         File stagedBlob = join(STAGING_DIR, hashCode);
         stagedBlob.delete();
+        this.addStage.remove(fileName);
+    }
+
+    /** Untracked the file in the staging area. */
+    public void removeStagingArea(String fileName) {
+        String hashCode = addStage.get(fileName);
         this.addStage.remove(fileName);
     }
 

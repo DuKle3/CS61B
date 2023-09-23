@@ -1,7 +1,5 @@
 package gitlet;
 
-import com.sun.jdi.connect.Connector;
-import edu.princeton.cs.algs4.StdOut;
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author TODO

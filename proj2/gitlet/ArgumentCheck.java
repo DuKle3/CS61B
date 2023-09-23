@@ -17,8 +17,23 @@ public class ArgumentCheck {
         }
     }
     public static void checkoutArgument(String[] args) {
-        if (args.length > 4 || args.length < 2 && nonInitialized()) {
-            wrongOperands();
+        int length = args.length;
+        switch(length) {
+            case 2:
+                break;
+            case 3:
+                if (!args[1].equals("--")) {
+                    wrongOperands();
+                }
+                break;
+            case 4:
+                if (!args[2].equals("--")) {
+                    wrongOperands();
+                }
+                break;
+            default:
+                wrongOperands();
+                break;
         }
     }
     /** Printout error message and Exit. */
