@@ -58,6 +58,22 @@ public class Main {
                 Repository.checkout(args);
                 break;
             // TODO: FILL THE REST IN
+            case "branch":
+                ArgumentCheck.argumentCheck(args, 2);
+                Repository.branch(args);
+                break;
+            case "rm-branch":
+                ArgumentCheck.argumentCheck(args, 2);
+                Repository.rmBranch(args);
+                break;
+            case "reset":
+                ArgumentCheck.argumentCheck(args, 2);
+                Repository.reset(args);
+                break;
+            case "merge" :
+                //ArgumentCheck.argumentCheck(args, 2);
+                //Repository.merge(args);
+                break;
             default:
                 System.out.println("No command with that name exist.");
                 break;

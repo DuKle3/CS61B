@@ -68,6 +68,11 @@ public class AddStage implements Serializable {
         return addStage.isEmpty();
     }
 
+    /** Return True if the Staging Area is tracking the given file. */
+    public boolean contain(String fileName) {
+        return addStage.containsKey(fileName);
+    }
+
     /** Return the addStage Map. */
     public Map<String, String> getAddStage() {
         return addStage;

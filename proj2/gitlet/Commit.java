@@ -2,25 +2,22 @@ package gitlet;
 
 // TODO: any imports you need here
 
-import jdk.jshell.execution.Util;
 
 import java.io.File;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
 
 import static gitlet.Utils.join;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
- *
+ *  A Commit object track the blob which have been added.
  *  @author Dukle3
  */
 public class Commit implements Serializable {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Commit class here with a useful
      * comment above them describing what that variable represents and how that
@@ -72,6 +69,10 @@ public class Commit implements Serializable {
     /** Return Commit in the COMMIT_DIR with this hashCode. */
     public static Commit readFromFile(String commitHashCode) {
         File file = join(Directory.COMMIT_DIR, commitHashCode);
+        if (!file.exists()) {
+            System.out.println("No commit with that id exist.");
+            System.exit(0);
+        }
         return Utils.readObject(file, Commit.class);
     }
     /** Save this Commit with it's hashCode. */
@@ -98,6 +99,15 @@ public class Commit implements Serializable {
     }
     public String getTimestamp() {
         return this.timestamp;
+    }
+
+    /** Return True if the Commit contain the given file. */
+    public boolean contain(String fileName) {
+        return blobs.containsKey(fileName);
+    }
+
+    public boolean haveSameFile(String fileName, String fileHashCode) {
+        return blobs.get(fileName).equals(fileHashCode);
     }
 
 

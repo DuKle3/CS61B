@@ -1,26 +1,17 @@
 package gitlet;
 
-import jdk.jshell.execution.Util;
-
-import java.awt.*;
 import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
- *
+ *  The main logic of the gitlet.
  *  @author DuKle3
  */
 public class Repository {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
@@ -106,24 +97,25 @@ public class Repository {
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
 
         // This File does not exist in current Commit.
-        if (!currentCommit.getBlobs().containsKey(fileName)) {
+        if (!currentCommit.contain(fileName)) {
             stagingArea.addToStage(addBlob);
             stagingArea.save();
-            return;
-        }
-        // This File exist in current Commit.
-        // 1. same content (same hashCode)
-        // 2. different content
-        if (stagingArea.getAddStage().containsKey(fileName)) {
-            stagingArea.remove(fileName);
-        }
+        } else {
+            // This File exist in current Commit.
+            // 1. same content (same hashCode)
+            // 2. different content
 
-        if (currentCommit.getBlobs().get(fileName).equals(addBlob.getHashCode())) {
-            stagingArea.save();
-        }
-        else {
-            stagingArea.addToStage(addBlob);
-            stagingArea.save();
+            if (stagingArea.contain(fileName)) {
+                stagingArea.remove(fileName);
+            }
+
+            if (currentCommit.haveSameFile(fileName, addBlob.getHashCode())) {
+                stagingArea.save();
+            }
+            else {
+                stagingArea.addToStage(addBlob);
+                stagingArea.save();
+            }
         }
     }
     /** Remove
@@ -135,10 +127,10 @@ public class Repository {
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
         RemoveStage removedStage = Utils.readObject(removeStage, RemoveStage.class);
         Commit currentCommit = getCurrentCommit();
-        if (stagingArea.getAddStage().containsKey(removeFileName)) {
+        if (stagingArea.contain(removeFileName)) {
             stagingArea.remove(removeFileName);
         }
-        else if (currentCommit.getBlobs().containsKey(removeFileName)) {
+        else if (currentCommit.contain(removeFileName)) {
             String removeFileId = currentCommit.getBlobs().get(removeFileName);
             removedStage.addRemoveStage(removeFileName, removeFileId);
         }
@@ -151,7 +143,7 @@ public class Repository {
      *  0. if no files have been staged, print some message
      *  1. copy parent commit.
      *  2. StagingArea
-     * @param commitMessage
+     * @param args
      */
     public static void commit(String[] args) {
         if (args.length == 1) {
@@ -195,12 +187,6 @@ public class Repository {
     }
 
 
-    /** Move the active Branch with the commitHashCode. */
-    private static void moveActiveBranch(String commitHashCode) {
-        String activeBranchName = Utils.readContentsAsString(HEAD);
-        File activeBranchFile = join(Directory.HEADS_DIR, activeBranchName);
-        Utils.writeContents(activeBranchFile, commitHashCode);
-    }
 
     /** Log the commit information, and recursively log it's parentCommit. */
     public static void log() {
@@ -311,8 +297,24 @@ public class Repository {
         System.out.println();
     }
     // TODO: Complete Extra Points.
+
+    /** a1. Tracked in the current commit, changed in the working directory, but not staged
+     *  a2. Staged for addition, but with different contents than in the working directory
+     *  b1. Staged for addition, but deleted in the working directory
+     *  b2. Not staged for removal, but tracked in the current commit and deleted from the working directory.
+     */
     private static void modificationNotStagedStatus() {
         System.out.println("=== Modifications Not Staged For Commit ===");
+        Commit currentCommit = getCurrentCommit();
+        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        List<String> fileNames = Utils.plainFilenamesIn(CWD);
+        // a. modified
+    }
+    private static void modificationStatus(String fileName) {
+        System.out.println(fileName + "(modified)");
+    }
+    private static void deletedStatus(String fileName) {
+        System.out.println(fileName + "(deleted)");
     }
     private static void untrackedFileStatus() {
         System.out.println("=== Untracked Files ===");
@@ -345,7 +347,7 @@ public class Repository {
     /** Take the version of the file exist in the head Commit, and put it in the working directory. */
     private static void checkoutHeadFile(String fileName) {
         Commit currentCommit = getCurrentCommit();
-        if (!currentCommit.getBlobs().containsKey(fileName)) {
+        if (!currentCommit.contain(fileName)) {
             System.out.println("File does not exist in that commit.");
             System.exit(0);
         }
@@ -386,18 +388,23 @@ public class Repository {
         Commit currentCommit = getCurrentCommit();
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
+        // Compare
         for (String fileName : fileNames) {
-            if (!currentCommit.getBlobs().containsKey(fileName) && checkoutCommit.getBlobs().containsKey(fileName)) {
+            if (!currentCommit.contain(fileName) && checkoutCommit.contain(fileName)) {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 System.exit(0);
             }
         }
-        Set<String> checkoutFileNames = currentCommit.getBlobs().keySet();
-        for (String checkoutFile : checkoutFileNames) {
-            checkoutFile(currentCommit.getBlobs().get(checkoutFile));
-        }
+        checkoutCommit(checkoutCommitHashCode);
         stagingArea.clean();
         stagingArea.save();
+    }
+    /** Checkout all the files with the given commitHashCode. */
+    private static void checkoutCommit(String commitHashCode) {
+        Commit commit = Commit.readFromFile(commitHashCode);
+        for (String blobHashCode : commit.getBlobs().values()) {
+            checkoutFile(blobHashCode);
+        }
     }
 
     /** Checkout the file depend on the given blob hash code. */
@@ -405,6 +412,93 @@ public class Repository {
         Blob fileBlob = Blob.readFromFile(checkoutBlobHashCode);
         File checkoutFile = join(CWD, fileBlob.getFileName());
         Utils.writeContents(checkoutFile, fileBlob.getContent());
+    }
+
+    /** Create new branch with the given name, and points it at the current head commit. */
+    public static void branch(String[] args) {
+        String branchName = args[1];
+        File branchFile = join(Directory.HEADS_DIR, branchName);
+        if (branchFile.exists()) {
+            System.out.println("A branch with that name already exists.");
+            System.exit(0);
+        } else {
+            Commit currentCommit = getCurrentCommit();
+            Utils.writeContents(branchFile, currentCommit.getHashCode());
+            Utils.writeContents(HEAD, branchName);
+        }
+    }
+
+    /** Deletes the branch with the given name. */
+    public static void rmBranch(String[] args) {
+        String branchName = args[1];
+        String currentBranchName = Utils.readContentsAsString(HEAD);
+        File branchFile = join(Directory.HEADS_DIR, branchName);
+        checkBranchExist(branchName);
+        if (currentBranchName.equals(branchName)) {
+            System.out.println("Cannot remove the current branch.");
+        } else {
+            branchFile.delete();
+        }
+    }
+
+    /** Checks out all the files tracked by the given commit.
+     *  Removes tracked files that are not present in that commit.
+     * @param args
+     */
+    public static void reset(String[] args) {
+        String commitHashCode = args[1];
+        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        // Remove file.
+        List<String> fileNames = Utils.plainFilenamesIn(CWD);
+        for (String fileName : fileNames) {
+            File file = join(CWD, fileName);
+            Utils.restrictedDelete(file);
+        }
+        checkoutCommit(commitHashCode);
+        stagingArea.clean();
+        stagingArea.save();
+        Utils.writeContents(HEAD, commitHashCode);
+    }
+
+    /** TODO: Merge.
+     *  1. Find split point.
+     */
+    public static void merge(String[] args) {
+        String mergeBranchName = args[1];
+        checkBranchExist(mergeBranchName);
+        Commit splitPoint = findSplitPoint(mergeBranchName);
+    }
+    private static Commit findSplitPoint(String branchName) {
+        File branch = join(Directory.HEADS_DIR, branchName);
+        String branchCommitHashCode = Utils.readContentsAsString(branch);
+
+        Commit branchCommit = Commit.readFromFile(branchCommitHashCode);
+        Commit currentCommit = getCurrentCommit();
+        if (branchCommit.getHashCode().equals(currentCommit.getHashCode())) {
+            System.out.println("Cannot merge a branch with itself.");
+            System.exit(0);
+        }
+
+
+        List<String> currentCommitAncestors = commitAncestors(currentCommit);
+        List<String> branchCommitAncestors = commitAncestors(branchCommit);
+
+        for (int i = 0; i < branchCommitAncestors.size(); i++) {
+            String hashCode = branchCommitAncestors.get(i);
+            if (currentCommitAncestors.contains(hashCode)) {
+                return Commit.readFromFile(hashCode);
+            }
+        }
+        return new Commit();
+    }
+    private static List<String> commitAncestors(Commit commit) {
+        List<String> ancestors = new ArrayList<>();
+        while (!commit.getParentHashCode().isEmpty()) {
+            String parentHashCode = commit.getParentHashCode().get(0);
+            ancestors.add(parentHashCode);
+            commit = Commit.readFromFile(parentHashCode);
+        }
+        return ancestors;
     }
 
     /* Return the CurrentCommit which HEAD is pointing to. */
@@ -423,5 +517,20 @@ public class Repository {
         File currentCommitFile = join(Directory.COMMIT_DIR, currentCommitId);
         return Utils.readObject(currentCommitFile, Commit.class);
     }
-}
+    /** Move the active Branch with the commitHashCode. */
+    private static void moveActiveBranch(String commitHashCode) {
+        String activeBranchName = Utils.readContentsAsString(HEAD);
+        File activeBranchFile = join(Directory.HEADS_DIR, activeBranchName);
+        Utils.writeContents(activeBranchFile, commitHashCode);
+    }
 
+    /** Check the given branchName exist, if not, print out error message and exit. */
+    private static boolean checkBranchExist(String branchName) {
+        File branchFile = join(Directory.HEADS_DIR, branchName);
+        if (!branchFile.exists()) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        return true;
+    }
+}
