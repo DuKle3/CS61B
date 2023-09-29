@@ -20,8 +20,8 @@ public class AddStage implements Serializable {
      *  2. store the key-value pair in the addStage Map.
      * @param addBlob
      */
-    public void addToStage(Blob addBlob) {
-        this.addStage.put(addBlob.getFileName(), addBlob.getHashCode());
+    public void addToStage(String fileName, Blob addBlob) {
+        this.addStage.put(fileName,  addBlob.getHashCode());
         File stagedBlob = join(STAGING_DIR, addBlob.getHashCode());
         Utils.writeObject(stagedBlob, addBlob);
     }

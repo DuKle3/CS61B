@@ -22,6 +22,11 @@ public class RemoveStage implements Serializable {
         }
     }
 
+    /** Unremoved file with the given fileName. */
+    public void remove(String fileName) {
+        removeStage.remove(fileName);
+    }
+
     /** Return the removeStage. */
     public Map<String, String> getRemoveStage() {
         return removeStage;

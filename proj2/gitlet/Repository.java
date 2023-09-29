@@ -12,7 +12,6 @@ import static gitlet.Utils.*;
  */
 public class Repository {
     /**
-     *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
      * variable is used. We've provided two examples for you.
@@ -80,6 +79,9 @@ public class Repository {
     }
 
     /** Add the file to the staging area.
+     *  1. staged
+     *  2. if CWD version of the file is identical to the version in the currentCommit, don't stage it, and remove it
+     *  from staging area if it is already there. (file changed, added, changed back.)
      *
      * @param fileName
      */
@@ -95,25 +97,27 @@ public class Repository {
         byte[] contents = Utils.readContents(addFile);
         Blob addBlob = new Blob(contents, fileName);
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        RemoveStage removeStageArea = Utils.readObject(removeStage, RemoveStage.class);
 
         // This File does not exist in current Commit.
         if (!currentCommit.contain(fileName)) {
-            stagingArea.addToStage(addBlob);
+            stagingArea.addToStage(fileName, addBlob);
             stagingArea.save();
         } else {
             // This File exist in current Commit.
-            // 1. same content (same hashCode)
-            // 2. different content
-
             if (stagingArea.contain(fileName)) {
                 stagingArea.remove(fileName);
             }
 
+            // 1. same content (same hashCode)
             if (currentCommit.haveSameFile(fileName, addBlob.getHashCode())) {
+                removeStageArea.remove(fileName);
+                removeStageArea.save();
                 stagingArea.save();
             }
+            // 2. different content
             else {
-                stagingArea.addToStage(addBlob);
+                stagingArea.addToStage(fileName, addBlob);
                 stagingArea.save();
             }
         }
@@ -265,7 +269,6 @@ public class Repository {
         modificationNotStagedStatus();
         // 5. Untracked Files
         untrackedFileStatus();
-
     }
     /** Display the current branch status. */
     private static void branchStatus() {
@@ -352,20 +355,7 @@ public class Repository {
     private static void checkoutHeadFile(String fileName) {
         Commit currentCommit = getCurrentCommit();
         String blobHashCode = currentCommit.getBlobs().get(fileName);
-        checkFileExistInCommit(currentCommit, fileName);
-        checkoutFile(blobHashCode);
-    }
-    /** Take the version of the file exist in the commit with the given id. */
-    private static void checkoutCommitFile(String commitHashCode, String fileName) {
-        File commitFile = join(Directory.COMMIT_DIR, commitHashCode);
-        if (!commitFile.exists()){
-            System.out.println("No commit with that id exits.");
-            System.exit(0);
-        }
-        Commit givenCommit = Commit.readFromFile(commitHashCode);
-        String blobHashCode = givenCommit.getBlobs().get(fileName);
-        checkFileExistInCommit(givenCommit, fileName);
-        checkoutFile(blobHashCode);
+        checkoutCommitFileName(currentCommit, fileName);
     }
     /** Takes all files in the commit at the head of the given branch, and puts them in the working directory
      *  overwriting the versions of the files if they exist.
@@ -414,17 +404,28 @@ public class Repository {
     /** Checkout all the files with the given commitHashCode. */
     private static void checkoutCommit(String commitHashCode) {
         Commit commit = Commit.readFromFile(commitHashCode);
-        for (String blobHashCode : commit.getBlobs().values()) {
-            checkoutFile(blobHashCode);
+        for (String fileName : commit.getBlobs().keySet()) {
+            checkoutCommitFileName(commit, fileName);
         }
     }
-
-    /** Checkout the file depend on the given blob hash code. */
-    private static void checkoutFile(String checkoutBlobHashCode) {
-        Blob fileBlob = Blob.readFromFile(checkoutBlobHashCode);
-        File checkoutFile = join(CWD, fileBlob.getFileName());
-        Utils.writeContents(checkoutFile, fileBlob.getContent());
+    private static void checkoutCommitFile(String commitHashCode, String fileName) {
+        File commitFile = join(Directory.COMMIT_DIR, commitHashCode);
+        if (!commitFile.exists()){
+            System.out.println("No commit with that id exits.");
+            System.exit(0);
+        }
+        checkoutCommitFileName(Commit.readFromFile(commitHashCode), fileName);
     }
+    /** Take the version of the file exist in the commit with the given id. */
+    private static void checkoutCommitFileName(Commit commit , String fileName) {
+        checkFileExistInCommit(commit, fileName);
+        String blobHashCode = commit.getBlobs().get(fileName);
+        Blob checkoutBlob = Blob.readFromFile(blobHashCode);
+
+        File checkoutFile = join(CWD, fileName);
+        Utils.writeContents(checkoutFile, checkoutBlob.getContent());
+    }
+
     private static void checkFileExistInCommit(Commit commit, String fileName) {
         if (!commit.contain(fileName)) {
             System.out.println("File does not exist in that commit.");

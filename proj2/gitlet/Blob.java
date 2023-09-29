@@ -10,19 +10,14 @@ public class Blob implements Serializable {
     /** Represent the blob in the gitlet. */
     private byte[] content;
     private String id;
-    private String fileName;
 
     /** Constructor */
     public Blob(byte[] content, String fileName) {
         this.content = content;
         this.id = Utils.sha1(content);
-        this.fileName = fileName;
     }
 
-    /** Return Blob's fileName. */
-    public String getFileName() {
-        return this.fileName;
-    }
+
     /** Return Blob's id. */
     public String getHashCode() {
         return this.id;
