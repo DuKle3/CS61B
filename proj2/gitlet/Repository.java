@@ -442,6 +442,11 @@ public class Repository {
 
     /** Checkout all the files with the given commitHashCode. */
     private static void checkoutCommit(String commitHashCode) {
+        File commitFile = join(Directory.COMMIT_DIR, commitHashCode);
+        if (!commitFile.exists()) {
+            System.out.println("No commit with that id exits.");
+            System.exit(0);
+        }
         Commit commit = Commit.readFromFile(commitHashCode);
         for (String fileName : commit.getBlobs().keySet()) {
             checkoutCommitFileName(commit, fileName);
@@ -550,7 +555,7 @@ public class Repository {
             if (inHead && inBranch) {
                 // 1. modified in head but not other -> head
                 if (modifiedInHead && !modifiedInBranch) {
-                    break;
+                    continue;
                 }
                 // 2. modified in other but not head -> other
                 else if (!modifiedInHead && modifiedInBranch) {
@@ -563,7 +568,7 @@ public class Repository {
                  */
                 else if (modifiedInHead && modifiedInBranch) {
                     if (headMap.get(fileName).equals(branchMap.get(fileName))) {
-                        break;
+                        continue;
                     } else {
                         Blob mergeBlob = mergeConflict(fileName, headMap.get(fileName), branchMap.get(fileName));
                         encounterConflict = true;
@@ -586,7 +591,7 @@ public class Repository {
             // 7. unmodified in branch but not present in head.
             else if (!inHead && inBranch) {
                 if (!modifiedInBranch) {
-                    break;
+                    continue;
                 } else {
                     Blob mergeBlob = mergeConflict(fileName, null, branchMap.get(fileName));
                     encounterConflict = true;
@@ -643,8 +648,12 @@ public class Repository {
         return new Blob(mergeByteContent);
     }
     private static void mergeAncestorMessage(Commit head, Commit branch, Commit splitPoint) {
+        // head == branch
+        if (head.getHashCode().equals(branch.getHashCode())) {
+            System.out.println("Cannot merge a branch with itself.");
+        }
         // branch == splitPoint
-        if (branch.getHashCode().equals(splitPoint.getHashCode())) {
+        else if (branch.getHashCode().equals(splitPoint.getHashCode())) {
             System.out.println("Given branch is an ancestor of the current branch.");
             System.exit(0);
         }
@@ -654,9 +663,12 @@ public class Repository {
             checkoutCommit(branch.getHashCode());
             System.exit(0);
         }
-        // head == branch
-        else if (head.getHashCode().equals(branch.getHashCode())) {
-            System.out.println("Cannot merge a branch with itself.");
+        // uncommitted file
+        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        RemoveStage removedStage = Utils.readObject(removeStage, RemoveStage.class);
+        if (!stagingArea.isEmpty() || !removedStage.isEmpty()) {
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
         }
         // untracked file
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
@@ -665,12 +677,6 @@ public class Repository {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 System.exit(0);
             }
-        }
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
-        RemoveStage removedStage = Utils.readObject(removeStage, RemoveStage.class);
-        if (!stagingArea.isEmpty() || !removedStage.isEmpty()) {
-            System.out.println("You have uncommitted changes.");
-            System.exit(0);
         }
     }
     /* Return the CurrentCommit which HEAD is pointing to. */

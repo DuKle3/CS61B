@@ -18,7 +18,8 @@ public class SplitPoint {
         String minCommitHashCode = null;
         int minCommitDepth = branchMap.size();
         for (String commitHashCode : headMap.keySet()) {
-            if (branchMap.containsKey(commitHashCode) && branchMap.get(commitHashCode) < minCommitDepth) {
+            boolean branchContain = branchMap.containsKey(commitHashCode);
+            if (branchContain && branchMap.get(commitHashCode) < minCommitDepth) {
                 minCommitHashCode = commitHashCode;
                 minCommitDepth = branchMap.get(commitHashCode);
             }

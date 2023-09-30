@@ -12,12 +12,18 @@ public class ArgumentCheck {
         }
     }
     public static void argumentCheck(String[] args, int argumentNumber) {
-        if (args.length != argumentNumber && nonInitialized()) {
+        if (nonInitialized()) {
+            nonInitializedMessage();
+        }
+        if (args.length != argumentNumber) {
             wrongOperands();
         }
     }
     public static void checkoutArgument(String[] args) {
         int length = args.length;
+        if (nonInitialized()) {
+            nonInitializedMessage();
+        }
         switch(length) {
             case 2:
                 break;
@@ -39,6 +45,11 @@ public class ArgumentCheck {
     /** Printout error message and Exit. */
     private static void wrongOperands() {
         System.out.println("Incorrect operands.");
+        System.exit(0);
+    }
+    /** Printout error message and Exit. */
+    private static void nonInitializedMessage() {
+        System.out.println("Not in an initialized Gitlet directory.");
         System.exit(0);
     }
     /** Return true if .gitlet folder exist. */
