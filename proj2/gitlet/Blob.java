@@ -12,7 +12,7 @@ public class Blob implements Serializable {
     private String id;
 
     /** Constructor */
-    public Blob(byte[] content, String fileName) {
+    public Blob(byte[] content) {
         this.content = content;
         this.id = Utils.sha1(content);
     }

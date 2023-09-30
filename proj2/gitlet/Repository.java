@@ -1,6 +1,6 @@
 package gitlet;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 
 import static gitlet.Utils.*;
@@ -95,7 +95,7 @@ public class Repository {
         }
 
         byte[] contents = Utils.readContents(addFile);
-        Blob addBlob = new Blob(contents, fileName);
+        Blob addBlob = new Blob(contents);
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
         RemoveStage removeStageArea = Utils.readObject(removeStage, RemoveStage.class);
 
@@ -312,18 +312,53 @@ public class Repository {
         System.out.println("=== Modifications Not Staged For Commit ===");
         Commit currentCommit = getCurrentCommit();
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        RemoveStage removedStage = Utils.readObject(removeStage, RemoveStage.class);
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
         // a. modified
+        for (String fileName : fileNames) {
+            File file = join(CWD, fileName);
+            String hashCode = Utils.sha1(Utils.readContents(file));
+            if (currentCommit.contain(fileName) && !stagingArea.contain(fileName) && !currentCommit.getBlobs().get(fileName).equals(hashCode)) {
+                modificationStatus(fileName);
+            } else if (stagingArea.contain(fileName) && !stagingArea.getAddStage().get(fileName).equals(hashCode)) {
+                modificationStatus(fileName);
+            }
+        }
+
+        // b. deleted
+        // b1. In staging area, but deleted
+        // b2. tracked in currentCommit, not staged for removal, but deleted.
+        for (String fileName : stagingArea.getAddStage().keySet()) {
+            if (!fileNames.contains(fileName)) {
+                deletedStatus(fileName);
+            }
+        }
+
+        for (String fileName : currentCommit.getBlobs().keySet()) {
+            if (!fileNames.contains(fileName) && !removedStage.contains(fileName)) {
+                deletedStatus(fileName);
+            }
+        }
+
         System.out.println();
     }
     private static void modificationStatus(String fileName) {
-        System.out.println(fileName + "(modified)");
+        System.out.println(fileName + " (modified)");
     }
     private static void deletedStatus(String fileName) {
-        System.out.println(fileName + "(deleted)");
+        System.out.println(fileName + " (deleted)");
     }
+    //** TODO: */
     private static void untrackedFileStatus() {
         System.out.println("=== Untracked Files ===");
+        Commit currentCommit = getCurrentCommit();
+        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        List<String> fileNames = Utils.plainFilenamesIn(CWD);
+        for (String fileName : fileNames) {
+            if (!currentCommit.contain(fileName) && !stagingArea.contain(fileName)) {
+                System.out.println(fileName);
+            }
+        }
         System.out.println();
     }
 
@@ -479,46 +514,152 @@ public class Repository {
     }
 
     /** TODO: Merge.
-     *  1. Find split point.
+     *  Find split point.
+     *  a. modified in one, and the other not.
      */
     public static void merge(String[] args) {
-        String mergeBranchName = args[1];
-        checkBranchExist(mergeBranchName);
-        Commit splitPoint = findSplitPoint(mergeBranchName);
-    }
-    private static Commit findSplitPoint(String branchName) {
-        File branch = join(Directory.HEADS_DIR, branchName);
-        String branchCommitHashCode = Utils.readContentsAsString(branch);
+        checkBranchExist(args[1]);
+        Commit head = getCurrentCommit();
+        Commit branch = Commit.readFromFile(args[1]);
+        Commit splitPoint = SplitPoint.splitPoint(head, branch);
+        mergeAncestorMessage(head, branch, splitPoint);
+        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
 
-        Commit branchCommit = Commit.readFromFile(branchCommitHashCode);
-        Commit currentCommit = getCurrentCommit();
-        if (branchCommit.getHashCode().equals(currentCommit.getHashCode())) {
-            System.out.println("Cannot merge a branch with itself.");
-            System.exit(0);
-        }
+        Map<String, String> headMap = head.getBlobs();
+        Map<String, String> branchMap = branch.getBlobs();
+        Map<String, String> splitMap = splitPoint.getBlobs();
 
+        // Iterate SplitPoint Files.
+        for (String fileName : splitPoint.getBlobs().keySet()) {
+            String splitFileHashCode = splitPoint.getBlobs().get(fileName);
+            boolean inHead = headMap.containsKey(fileName);
+            boolean inBranch = branchMap.containsKey(fileName);
 
-        List<String> currentCommitAncestors = commitAncestors(currentCommit);
-        List<String> branchCommitAncestors = commitAncestors(branchCommit);
+            boolean modifiedInHead = inHead && !headMap.get(fileName).equals(splitFileHashCode);
+            boolean modifiedInBranch = inBranch && !branchMap.get(fileName).equals(splitFileHashCode);
 
-        for (int i = 0; i < branchCommitAncestors.size(); i++) {
-            String hashCode = branchCommitAncestors.get(i);
-            if (currentCommitAncestors.contains(hashCode)) {
-                return Commit.readFromFile(hashCode);
+            if (inHead && inBranch) {
+                // 1. modified in head but not other -> head
+                if (modifiedInHead && !modifiedInBranch) {
+                    break;
+                }
+                // 2. modified in other but not head -> other
+                else if (!modifiedInHead && modifiedInBranch) {
+                    headMap.put(fileName, headMap.get(fileName));
+                    checkoutCommitFileName(branch, fileName);
+                }
+                /** 3. modified in both:
+                 *    a. in same way.
+                 *    b. conflict
+                 */
+                else if (modifiedInHead && modifiedInBranch) {
+                    if (headMap.get(fileName).equals(branchMap.get(fileName))) {
+                        break;
+                    } else {
+                        Blob mergeBlob = mergeConflict(fileName, headMap.get(fileName), branchMap.get(fileName));
+                        stagingArea.addToStage(fileName, mergeBlob);
+                        stagingArea.save();
+                    }
+                }
+            }
+            // 6. unmodified in head but not present in others.
+            else if (inHead && !inBranch) {
+                if (!modifiedInHead) {
+                    headMap.remove(fileName);
+                    File file = join(CWD, fileName);
+                    file.delete();
+                } else {
+                    Blob mergeBlob = mergeConflict(fileName, headMap.get(fileName), null);
+                    stagingArea.addToStage(fileName, mergeBlob);
+                    stagingArea.save();
+                }
+            }
+            // 7. unmodified in branch but not present in head.
+            else if (!inHead && inBranch) {
+                if (!modifiedInBranch) {
+                    break;
+                } else {
+                    Blob mergeBlob = mergeConflict(fileName, null, branchMap.get(fileName));
+                    stagingArea.addToStage(fileName, mergeBlob);
+                    stagingArea.save();
+                }
             }
         }
-        return new Commit();
-    }
-    private static List<String> commitAncestors(Commit commit) {
-        List<String> ancestors = new ArrayList<>();
-        while (!commit.getParentHashCode().isEmpty()) {
-            String parentHashCode = commit.getParentHashCode().get(0);
-            ancestors.add(parentHashCode);
-            commit = Commit.readFromFile(parentHashCode);
+
+        // 4. not in split nor other but in head -> head
+        // 5. not in split nor head but in other -> other
+        for (String fileName : branchMap.keySet()) {
+            boolean notInSplit = !splitMap.containsKey(fileName);
+            boolean notInHead = !headMap.containsKey(fileName);
+            if (notInHead && notInSplit) {
+                headMap.put(fileName, branchMap.get(fileName));
+                checkoutCommitFileName(branch, fileName);
+            }
         }
-        return ancestors;
+        String currentBranchName = Utils.readContentsAsString(HEAD);
+        String mergeMessage = "Merged " + args[1] + "into " + currentBranchName;
+        Commit newCommit = head.copyWithMessage(mergeMessage);
+        String newCommitHashCode = newCommit.getHashCode();
+        newCommit.updateBlobs(headMap);
+        newCommit.addSecondParent(branch.getHashCode());
+
+        moveActiveBranch(newCommitHashCode);
+
+        newCommit.save();
+        stagingArea.save();
     }
 
+    /** Deal with the Merge Conflict. */
+    public static Blob mergeConflict(String fileName, String headBlobHashCode, String branchBlobHashCode) {
+        String headContent = "";
+        String branchContent = "";
+
+        if (headBlobHashCode != null) {
+            Blob headBlob = Blob.readFromFile(headBlobHashCode);
+            headContent = headBlob.getContent().toString();
+        }
+        if (branchBlobHashCode != null) {
+            Blob branchBlob = Blob.readFromFile(branchBlobHashCode);
+            branchContent = branchBlob.getContent().toString();
+        }
+
+        String mergeContent = "<<<<<<< HEAD" + "\n" + headContent + "\n" + "=======\n" + branchContent + "\n>>>>>>>\n";
+        byte[] mergeByteContent = mergeContent.getBytes();
+        File mergeFile = join(CWD, fileName);
+        Utils.writeContents(mergeFile, mergeByteContent);
+        return new Blob(mergeByteContent);
+    }
+    private static void mergeAncestorMessage(Commit head, Commit branch, Commit splitPoint) {
+        // branch == splitPoint
+        if (branch.getHashCode().equals(splitPoint.getHashCode())) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
+        }
+        // head == splitPoint
+        else if (head.getHashCode().equals(splitPoint.getHashCode())) {
+            System.out.println("Current branch fast-forwarded.");
+            checkoutCommit(branch.getHashCode());
+            System.exit(0);
+        }
+        // head == branch
+        else if (head.getHashCode().equals(branch.getHashCode())) {
+            System.out.println("Cannot merge a branch with itself.");
+        }
+        // untracked file
+        List<String> fileNames = Utils.plainFilenamesIn(CWD);
+        for (String fileName : fileNames) {
+            if (!head.contain(fileName) && branch.contain(fileName)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        RemoveStage removedStage = Utils.readObject(removeStage, RemoveStage.class);
+        if (!stagingArea.isEmpty() || !removedStage.isEmpty()) {
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+    }
     /* Return the CurrentCommit which HEAD is pointing to. */
     /**
      *  1. read the HEAD

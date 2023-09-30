@@ -121,4 +121,13 @@ public class Commit implements Serializable {
         DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
         return dateFormat.format(date);
     }
+
+    /** Update the Map. (For merge). */
+    public void updateBlobs(Map<String, String> map) {
+        blobs = map;
+    }
+    /** Update the parent. (For merge). */
+    public void addSecondParent(String parentHashCode) {
+        parentCommits.add(parentHashCode);
+    }
 }

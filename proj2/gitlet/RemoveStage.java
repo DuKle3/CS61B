@@ -36,9 +36,15 @@ public class RemoveStage implements Serializable {
     public void save() {
         Utils.writeObject(Repository.removeStage, this);
     }
+
     /** Return True if removeStage is Empty. */
     public boolean isEmpty() {
         return removeStage.isEmpty();
+    }
+
+    /** Return true if the file is staged for removed. */
+    public boolean contains(String fileName) {
+        return removeStage.containsKey(fileName);
     }
     /** Clean up the removeStage. */
     public void clean() {
