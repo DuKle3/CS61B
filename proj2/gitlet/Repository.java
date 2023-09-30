@@ -29,8 +29,8 @@ public class Repository {
     public static final File HEAD = join(GITLET_DIR, "HEAD");
 
     /** Staging Area. */
-    public static final File addStage = join(GITLET_DIR, "addStage");
-    public static final File removeStage = join(GITLET_DIR, "removeStage");
+    public static final File ADD_STAGE = join(GITLET_DIR, "addStage");
+    public static final File REMOVE_STAGE = join(GITLET_DIR, "REMOVE_STAGE");
 
     /** The Commits, Blobs directory. */
 
@@ -69,15 +69,15 @@ public class Repository {
 
     /** Initialize Staging Area
      *  1. create empty addStage
-     *  2. create empty removeStage
+     *  2. create empty REMOVE_STAGE
      */
     private static void initStagingArea() {
-        AddStage addStage = new AddStage();
-        RemoveStage removeStage = new RemoveStage();
+        AddStage ADD_STAGE = new AddStage();
+        RemoveStage REMOVE_STAGE = new RemoveStage();
         File addStageFile = join(GITLET_DIR, "addStage");
         File removeStageFile = join(GITLET_DIR, "removeStage");
-        Utils.writeObject(addStageFile, addStage);
-        Utils.writeObject(removeStageFile, removeStage);
+        Utils.writeObject(addStageFile, ADD_STAGE);
+        Utils.writeObject(removeStageFile, REMOVE_STAGE);
     }
 
     /** Add the file to the staging area.
@@ -99,8 +99,8 @@ public class Repository {
 
         byte[] contents = Utils.readContents(addFile);
         Blob addBlob = new Blob(contents);
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
-        RemoveStage removeStageArea = Utils.readObject(removeStage, RemoveStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
+        RemoveStage removeStageArea = Utils.readObject(REMOVE_STAGE, RemoveStage.class);
 
         // This File does not exist in current Commit.
         if (!currentCommit.contain(fileName)) {
@@ -117,9 +117,8 @@ public class Repository {
                 removeStageArea.remove(fileName);
                 removeStageArea.save();
                 stagingArea.save();
-            }
-            // 2. different content
-            else {
+            } else {
+                // 2. different content
                 stagingArea.addToStage(fileName, addBlob);
                 stagingArea.save();
             }
@@ -131,19 +130,17 @@ public class Repository {
      *  3. file is neither staged nor tracked by the head commit.
      */
     public static void rm(String removeFileName) {
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
-        RemoveStage removedStage = Utils.readObject(removeStage, RemoveStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
+        RemoveStage removedStage = Utils.readObject(REMOVE_STAGE, RemoveStage.class);
         Commit currentCommit = getCurrentCommit();
         if (stagingArea.contain(removeFileName)) {
             stagingArea.removeStagingArea(removeFileName);
             stagingArea.save();
-        }
-        else if (currentCommit.contain(removeFileName)) {
+        } else if (currentCommit.contain(removeFileName)) {
             String removeFileId = currentCommit.getBlobs().get(removeFileName);
             removedStage.addRemoveStage(removeFileName, removeFileId);
             removedStage.save();
-        }
-        else {
+        } else {
             System.out.println("No reason to remove the file.");
         }
     }
@@ -160,8 +157,8 @@ public class Repository {
             System.exit(0);
         }
         String commitMessage = args[1];
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
-        RemoveStage removeStageArea = Utils.readObject(removeStage, RemoveStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
+        RemoveStage removeStageArea = Utils.readObject(REMOVE_STAGE, RemoveStage.class);
         Commit currentCommit = getCurrentCommit();
 
         if (stagingArea.isEmpty() && removeStageArea.isEmpty()) {
@@ -174,14 +171,14 @@ public class Repository {
          *  2. Untracked the file in the removeStageArea.
          */
 
-        Map<String, String> Blobs = currentCommit.getBlobs();
+        Map<String, String> blobs = currentCommit.getBlobs();
 
         for (String fileName : stagingArea.getAddStage().keySet()) {
-            Blobs.put(fileName, stagingArea.getAddStage().get(fileName));
+            blobs.put(fileName, stagingArea.getAddStage().get(fileName));
         }
 
         for (String removeFileName : removeStageArea.getRemoveStage().keySet()) {
-            Blobs.remove(removeFileName);
+            blobs.remove(removeFileName);
         }
 
         stagingArea.saveBlobs();
@@ -292,7 +289,7 @@ public class Repository {
     /** Display the current Staging Area Status. */
     private static void stagedStatus() {
         System.out.println("=== Staged Files ===");
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
         for (String addFileName : stagingArea.getAddStage().keySet()) {
             System.out.println(addFileName);
         }
@@ -301,7 +298,7 @@ public class Repository {
     /** Display the current removal Files Status. */
     private static void removalStatus() {
         System.out.println("=== Removed Files ===");
-        RemoveStage removeStageArea = Utils.readObject(removeStage, RemoveStage.class);
+        RemoveStage removeStageArea = Utils.readObject(REMOVE_STAGE, RemoveStage.class);
         for (String removeFile : removeStageArea.getRemoveStage().keySet()) {
             System.out.println(removeFile);
         }
@@ -316,17 +313,20 @@ public class Repository {
     private static void modificationNotStagedStatus() {
         System.out.println("=== Modifications Not Staged For Commit ===");
         Commit currentCommit = getCurrentCommit();
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
-        RemoveStage removedStage = Utils.readObject(removeStage, RemoveStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
+        RemoveStage removedStage = Utils.readObject(REMOVE_STAGE, RemoveStage.class);
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
         // a. modified
         for (String fileName : fileNames) {
             File file = join(CWD, fileName);
             String hashCode = Utils.sha1(Utils.readContents(file));
+
             boolean inCommit = currentCommit.contain(fileName);
             boolean inStagingArea = stagingArea.contain(fileName);
-            boolean commitHasSameFile = currentCommit.getBlobs().get(fileName).equals(hashCode);
-            boolean stagingAreaHasSameFile = stagingArea.getAddStage().get(fileName).equals(hashCode);
+
+            boolean commitHasSameFile = inCommit && currentCommit.getBlobs().get(fileName).equals(hashCode);
+            boolean stagingAreaHasSameFile = inStagingArea && stagingArea.getAddStage().get(fileName).equals(hashCode);
+
             if (inCommit && !inStagingArea && !commitHasSameFile) {
                 modificationStatus(fileName);
             } else if (inStagingArea && !stagingAreaHasSameFile) {
@@ -360,7 +360,7 @@ public class Repository {
     private static void untrackedFileStatus() {
         System.out.println("=== Untracked Files ===");
         Commit currentCommit = getCurrentCommit();
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
         for (String fileName : fileNames) {
             if (!currentCommit.contain(fileName) && !stagingArea.contain(fileName)) {
@@ -387,17 +387,14 @@ public class Repository {
         // checkout [branchName]
         if (args.length == 2) {
             checkoutBranchFile(args[1]);
-        }
-        // checkout -- [fileName]
-        else if (args[1].equals("--") && args.length == 3) {
+        } else if (args[1].equals("--") && args.length == 3) {
+            // checkout -- [fileName]
             String fileName = args[2];
             checkoutHeadFile(fileName);
-        }
-        // checkout [commit id] -- [fileName]
-        else if (args[2].equals("--") && args.length == 4) {
+        } else if (args[2].equals("--") && args.length == 4) {
+            // checkout [commit id] -- [fileName]
             checkoutCommitFile(commitId, args[3]);
-        }
-        else {
+        } else {
             System.exit(0);
         }
     }
@@ -428,7 +425,7 @@ public class Repository {
         Commit branchCommit = Commit.readFromFile(branchCommitHashCode);
 
         Commit currentCommit = getCurrentCommit();
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
 
         // file is untracked in the current branch and would be overwritten by the checkout.
@@ -451,7 +448,7 @@ public class Repository {
     }
 
     private static void untrackedFileMessage(Commit currentCommit, Commit branchCommit) {
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
         for (String fileName : fileNames) {
             if (!currentCommit.contain(fileName) && branchCommit.contain(fileName)) {
@@ -530,7 +527,7 @@ public class Repository {
      */
     public static void reset(String[] args) {
         String commitHashCode = args[1];
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
         checkoutCommit(commitHashCode);
         stagingArea.clean();
         stagingArea.save();
@@ -551,7 +548,7 @@ public class Repository {
         Commit branch = Commit.readFromFile(branchHashCode);
         Commit splitPoint = SplitPoint.splitPoint(head, branch);
         mergeAncestorMessage(head, branch, splitPoint);
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
 
         Map<String, String> headMap = head.getBlobs();
         Map<String, String> branchMap = branch.getBlobs();
@@ -571,17 +568,15 @@ public class Repository {
                 // 1. modified in head but not other -> head
                 if (modifiedInHead && !modifiedInBranch) {
                     continue;
-                }
-                // 2. modified in other but not head -> other
-                else if (!modifiedInHead && modifiedInBranch) {
+                } else if (!modifiedInHead && modifiedInBranch) {
+                    // 2. modified in other but not head -> other
                     headMap.put(fileName, headMap.get(fileName));
                     checkoutCommitFileName(branch, fileName);
-                }
-                /** 3. modified in both:
-                 *    a. in same way.
-                 *    b. conflict
-                 */
-                else if (modifiedInHead && modifiedInBranch) {
+                } else if (modifiedInHead && modifiedInBranch) {
+                    /* 3. modified in both:
+                         a. in same way.
+                         b. conflict
+                     */
                     if (headMap.get(fileName).equals(branchMap.get(fileName))) {
                         continue;
                     } else {
@@ -643,20 +638,21 @@ public class Repository {
     }
 
     /** Deal with the Merge Conflict. */
-    public static Blob mergeConflict(String fileName, String headBlobHashCode, String branchBlobHashCode) {
+    public static Blob mergeConflict(String fileName, String headBlobHC, String branchBlobHC) {
         String headContent = "";
         String branchContent = "";
 
-        if (headBlobHashCode != null) {
-            Blob headBlob = Blob.readFromFile(headBlobHashCode);
+        if (headBlobHC != null) {
+            Blob headBlob = Blob.readFromFile(headBlobHC);
             headContent = new String(headBlob.getContent(), StandardCharsets.UTF_8);
         }
-        if (branchBlobHashCode != null) {
-            Blob branchBlob = Blob.readFromFile(branchBlobHashCode);
+        if (branchBlobHC != null) {
+            Blob branchBlob = Blob.readFromFile(branchBlobHC);
             branchContent = new String(branchBlob.getContent(), StandardCharsets.UTF_8);
         }
 
-        String mergeContent = "<<<<<<< HEAD" + "\n" + headContent + "=======\n" + branchContent + ">>>>>>>\n";
+        String mergeContent = "<<<<<<< HEAD" + "\n" + headContent +
+                "=======\n" + branchContent + ">>>>>>>\n";
         byte[] mergeByteContent = mergeContent.getBytes();
         File mergeFile = join(CWD, fileName);
         Utils.writeContents(mergeFile, mergeByteContent);
@@ -679,8 +675,8 @@ public class Repository {
             checkoutCommit(branch.getHashCode());
         }
         // uncommitted file
-        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
-        RemoveStage removedStage = Utils.readObject(removeStage, RemoveStage.class);
+        AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
+        RemoveStage removedStage = Utils.readObject(REMOVE_STAGE, RemoveStage.class);
         if (!stagingArea.isEmpty() || !removedStage.isEmpty()) {
             System.out.println("You have uncommitted changes.");
             System.exit(0);
