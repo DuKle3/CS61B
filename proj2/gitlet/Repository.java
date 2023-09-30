@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static gitlet.Utils.*;
@@ -224,8 +225,11 @@ public class Repository {
         List<String> parentHashCode = eachCommit.getParentHashCode();
         if (parentHashCode.size() == 2) {
             System.out.print("Merge: ");
-            System.out.print(parentHashCode.get(0));
-            System.out.println(parentHashCode.get(1));
+            String firstParent = parentHashCode.get(0).substring(0, 7);
+            String secondParent = parentHashCode.get(1).substring(0, 7);
+            System.out.print(firstParent);
+            System.out.print(" ");
+            System.out.println(secondParent);
         }
         System.out.print("Date: ");
         System.out.println(eachCommit.getTimestamp());
@@ -518,9 +522,13 @@ public class Repository {
      *  a. modified in one, and the other not.
      */
     public static void merge(String[] args) {
-        checkBranchExist(args[1]);
+        String branchName = args[1];
+        checkBranchExist(branchName);
+        File branchFile = join(Directory.HEADS_DIR, branchName);
+        String branchHashCode = Utils.readContentsAsString(branchFile);
+
         Commit head = getCurrentCommit();
-        Commit branch = Commit.readFromFile(args[1]);
+        Commit branch = Commit.readFromFile(branchHashCode);
         Commit splitPoint = SplitPoint.splitPoint(head, branch);
         mergeAncestorMessage(head, branch, splitPoint);
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
@@ -529,6 +537,7 @@ public class Repository {
         Map<String, String> branchMap = branch.getBlobs();
         Map<String, String> splitMap = splitPoint.getBlobs();
 
+        boolean encounterConflict = false;
         // Iterate SplitPoint Files.
         for (String fileName : splitPoint.getBlobs().keySet()) {
             String splitFileHashCode = splitPoint.getBlobs().get(fileName);
@@ -557,8 +566,8 @@ public class Repository {
                         break;
                     } else {
                         Blob mergeBlob = mergeConflict(fileName, headMap.get(fileName), branchMap.get(fileName));
-                        stagingArea.addToStage(fileName, mergeBlob);
-                        stagingArea.save();
+                        encounterConflict = true;
+                        headMap.put(fileName, mergeBlob.getHashCode());
                     }
                 }
             }
@@ -570,8 +579,8 @@ public class Repository {
                     file.delete();
                 } else {
                     Blob mergeBlob = mergeConflict(fileName, headMap.get(fileName), null);
-                    stagingArea.addToStage(fileName, mergeBlob);
-                    stagingArea.save();
+                    encounterConflict = true;
+                    headMap.put(fileName, mergeBlob.getHashCode());
                 }
             }
             // 7. unmodified in branch but not present in head.
@@ -580,8 +589,8 @@ public class Repository {
                     break;
                 } else {
                     Blob mergeBlob = mergeConflict(fileName, null, branchMap.get(fileName));
-                    stagingArea.addToStage(fileName, mergeBlob);
-                    stagingArea.save();
+                    encounterConflict = true;
+                    headMap.put(fileName, mergeBlob.getHashCode());
                 }
             }
         }
@@ -596,8 +605,12 @@ public class Repository {
                 checkoutCommitFileName(branch, fileName);
             }
         }
+
+        if (encounterConflict) {
+            System.out.println("Encountered a merge conflict.");
+        }
         String currentBranchName = Utils.readContentsAsString(HEAD);
-        String mergeMessage = "Merged " + args[1] + "into " + currentBranchName;
+        String mergeMessage = "Merged " + args[1] + " into " + currentBranchName + ".";
         Commit newCommit = head.copyWithMessage(mergeMessage);
         String newCommitHashCode = newCommit.getHashCode();
         newCommit.updateBlobs(headMap);
@@ -616,14 +629,14 @@ public class Repository {
 
         if (headBlobHashCode != null) {
             Blob headBlob = Blob.readFromFile(headBlobHashCode);
-            headContent = headBlob.getContent().toString();
+            headContent = new String(headBlob.getContent(), StandardCharsets.UTF_8);
         }
         if (branchBlobHashCode != null) {
             Blob branchBlob = Blob.readFromFile(branchBlobHashCode);
-            branchContent = branchBlob.getContent().toString();
+            branchContent = new String(branchBlob.getContent(), StandardCharsets.UTF_8);
         }
 
-        String mergeContent = "<<<<<<< HEAD" + "\n" + headContent + "\n" + "=======\n" + branchContent + "\n>>>>>>>\n";
+        String mergeContent = "<<<<<<< HEAD" + "\n" + headContent + "=======\n" + branchContent + ">>>>>>>\n";
         byte[] mergeByteContent = mergeContent.getBytes();
         File mergeFile = join(CWD, fileName);
         Utils.writeContents(mergeFile, mergeByteContent);

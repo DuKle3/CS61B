@@ -167,6 +167,12 @@ public static void initialFolders();
 | A     | !A   | X      | conflict |
 | B     | B    | !B     | !B       |
 | X     | C    | X      | C        |
+| X     | X    | D      | D        |
+| E     | X    | E      | X        |
+| F     | F    | X      | X        |
+
+
+
 
 
 ## Persistence
