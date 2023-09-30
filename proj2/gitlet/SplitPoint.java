@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.*;
 import java.util.TreeMap;
 
-import static gitlet.Utils.join;
 
 public class SplitPoint {
     /** Store the Commit hashCode <-> Depth. */

@@ -8,7 +8,7 @@ import java.util.Map;
 import static gitlet.Utils.join;
 
 public class RemoveStage implements Serializable {
-    private Map<String, String> removeStage;
+    private final Map<String, String> removeStage;
     public RemoveStage() {
         this.removeStage = new HashMap<>();
     }

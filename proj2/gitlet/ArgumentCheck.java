@@ -1,8 +1,5 @@
 package gitlet;
 
-import java.io.File;
-
-import static gitlet.Utils.join;
 
 /** This class will check all the command have the right number of format of operands. */
 public class ArgumentCheck {
@@ -24,7 +21,7 @@ public class ArgumentCheck {
         if (nonInitialized()) {
             nonInitializedMessage();
         }
-        switch(length) {
+        switch (length) {
             case 2:
                 break;
             case 3:

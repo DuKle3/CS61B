@@ -1,8 +1,5 @@
 package gitlet;
 
-// TODO: any imports you need here
-
-
 import java.io.File;
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -17,28 +14,25 @@ import static gitlet.Utils.join;
  *  @author Dukle3
  */
 public class Commit implements Serializable {
-    /**
-     *
-     * List all instance variables of the Commit class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided one example for `message`.
+    /*
+
+      List all instance variables of the Commit class here with a useful
+      comment above them describing what that variable represents and how that
+      variable is used. We've provided one example for `message`.
      */
 
     /** The sha1 id of the commit. */
-    private String id;
+    private final String id;
     /** The message of this Commit. */
-    private String message;
+    private final String message;
     /** The parent commit hash id. */
-    private List<String> parentCommits;
+    private final List<String> parentCommits;
     /** The date of the commit, initial commit have the fixed value. */
-    private Date date;
+    private final Date date;
     /** The timestamp of the commit. */
-    private String timestamp;
+    private final String timestamp;
     /** Store the Key-Value pair, (FileName - FileSHAId). */
     private Map<String, String> blobs;
-
-
-    /* TODO: fill in the rest of this class. */
 
     /** Initial Commit constructor. */
     public Commit() {
@@ -87,9 +81,6 @@ public class Commit implements Serializable {
     }
     public String getMessage() {
         return this.message;
-    }
-    public Date getDate() {
-        return this.date;
     }
     public String getHashCode() {
         return this.id;

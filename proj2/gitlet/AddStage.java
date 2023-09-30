@@ -10,7 +10,7 @@ import static gitlet.Utils.join;
 
 public class AddStage implements Serializable {
     public static final File STAGING_DIR = join(Directory.GITLET_DIR, "staging");
-    private Map<String, String> addStage;
+    private final Map<String, String> addStage;
     public AddStage() {
         this.addStage = new HashMap<>();
     }

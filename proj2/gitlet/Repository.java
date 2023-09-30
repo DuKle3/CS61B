@@ -1,5 +1,6 @@
 package gitlet;
 
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -81,7 +82,8 @@ public class Repository {
 
     /** Add the file to the staging area.
      *  1. staged
-     *  2. if CWD version of the file is identical to the version in the currentCommit, don't stage it, and remove it
+     *  2. if CWD version of the file is identical to the version in the currentCommit
+     *  don't stage it, and remove it
      *  from staging area if it is already there. (file changed, added, changed back.)
      *
      * @param fileName
@@ -305,7 +307,6 @@ public class Repository {
         }
         System.out.println();
     }
-    // TODO: Complete Extra Points.
 
     /** a1. Tracked in the current commit, changed in the working directory, but not staged
      *  a2. Staged for addition, but with different contents than in the working directory
@@ -322,9 +323,13 @@ public class Repository {
         for (String fileName : fileNames) {
             File file = join(CWD, fileName);
             String hashCode = Utils.sha1(Utils.readContents(file));
-            if (currentCommit.contain(fileName) && !stagingArea.contain(fileName) && !currentCommit.getBlobs().get(fileName).equals(hashCode)) {
+            boolean inCommit = currentCommit.contain(fileName);
+            boolean inStagingArea = stagingArea.contain(fileName);
+            boolean commitHasSameFile = currentCommit.getBlobs().get(fileName).equals(hashCode);
+            boolean stagingAreaHasSameFile = stagingArea.getAddStage().get(fileName).equals(hashCode);
+            if (inCommit && !inStagingArea && !commitHasSameFile) {
                 modificationStatus(fileName);
-            } else if (stagingArea.contain(fileName) && !stagingArea.getAddStage().get(fileName).equals(hashCode)) {
+            } else if (inStagingArea && !stagingAreaHasSameFile) {
                 modificationStatus(fileName);
             }
         }
@@ -352,7 +357,6 @@ public class Repository {
     private static void deletedStatus(String fileName) {
         System.out.println(fileName + " (deleted)");
     }
-    //** TODO: */
     private static void untrackedFileStatus() {
         System.out.println("=== Untracked Files ===");
         Commit currentCommit = getCurrentCommit();
@@ -373,6 +377,13 @@ public class Repository {
      *  3. checkout [branchName]
      */
     public static void checkout(String[] args) {
+        String commitId = args[1];
+        List<String> commits = Utils.plainFilenamesIn(Directory.COMMIT_DIR);
+        for (String commit : commits) {
+            if (commitId.equals(commit.substring(0, commitId.length()))) {
+                commitId = commit;
+            }
+        }
         // checkout [branchName]
         if (args.length == 2) {
             checkoutBranchFile(args[1]);
@@ -384,7 +395,7 @@ public class Repository {
         }
         // checkout [commit id] -- [fileName]
         else if (args[2].equals("--") && args.length == 4) {
-            checkoutCommitFile(args[1], args[3]);
+            checkoutCommitFile(commitId, args[3]);
         }
         else {
             System.exit(0);
@@ -439,6 +450,16 @@ public class Repository {
         changeActiveBranch(branchName);
     }
 
+    private static void untrackedFileMessage(Commit currentCommit, Commit branchCommit) {
+        AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
+        List<String> fileNames = Utils.plainFilenamesIn(CWD);
+        for (String fileName : fileNames) {
+            if (!currentCommit.contain(fileName) && branchCommit.contain(fileName)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+    }
 
     /** Checkout all the files with the given commitHashCode. */
     private static void checkoutCommit(String commitHashCode) {
@@ -448,6 +469,7 @@ public class Repository {
             System.exit(0);
         }
         Commit commit = Commit.readFromFile(commitHashCode);
+        untrackedFileMessage(getCurrentCommit(), commit);
         for (String fileName : commit.getBlobs().keySet()) {
             checkoutCommitFileName(commit, fileName);
         }
@@ -465,7 +487,6 @@ public class Repository {
         checkFileExistInCommit(commit, fileName);
         String blobHashCode = commit.getBlobs().get(fileName);
         Blob checkoutBlob = Blob.readFromFile(blobHashCode);
-
         File checkoutFile = join(CWD, fileName);
         Utils.writeContents(checkoutFile, checkoutBlob.getContent());
     }
@@ -510,19 +531,13 @@ public class Repository {
     public static void reset(String[] args) {
         String commitHashCode = args[1];
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
-        // Remove file.
-        List<String> fileNames = Utils.plainFilenamesIn(CWD);
-        for (String fileName : fileNames) {
-            File file = join(CWD, fileName);
-            Utils.restrictedDelete(file);
-        }
         checkoutCommit(commitHashCode);
         stagingArea.clean();
         stagingArea.save();
-        Utils.writeContents(HEAD, commitHashCode);
+        moveActiveBranch(commitHashCode);
     }
 
-    /** TODO: Merge.
+    /** Merge.
      *  Find split point.
      *  a. modified in one, and the other not.
      */
@@ -651,6 +666,7 @@ public class Repository {
         // head == branch
         if (head.getHashCode().equals(branch.getHashCode())) {
             System.out.println("Cannot merge a branch with itself.");
+            System.exit(0);
         }
         // branch == splitPoint
         else if (branch.getHashCode().equals(splitPoint.getHashCode())) {
@@ -661,7 +677,6 @@ public class Repository {
         else if (head.getHashCode().equals(splitPoint.getHashCode())) {
             System.out.println("Current branch fast-forwarded.");
             checkoutCommit(branch.getHashCode());
-            System.exit(0);
         }
         // uncommitted file
         AddStage stagingArea = Utils.readObject(addStage, AddStage.class);
@@ -671,13 +686,7 @@ public class Repository {
             System.exit(0);
         }
         // untracked file
-        List<String> fileNames = Utils.plainFilenamesIn(CWD);
-        for (String fileName : fileNames) {
-            if (!head.contain(fileName) && branch.contain(fileName)) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                System.exit(0);
-            }
-        }
+        untrackedFileMessage(head, branch);
     }
     /* Return the CurrentCommit which HEAD is pointing to. */
     /**
