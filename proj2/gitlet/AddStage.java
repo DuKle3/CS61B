@@ -27,7 +27,7 @@ public class AddStage implements Serializable {
     }
     /** save the addStage back to the file. */
     public void save() {
-        Utils.writeObject(Repository.addStage, this);
+        Utils.writeObject(Repository.ADD_STAGE, this);
     }
 
     /** Remove the file in the staging Area and directory.

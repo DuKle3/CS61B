@@ -34,7 +34,7 @@ public class RemoveStage implements Serializable {
 
     /** Save the RemoveStage back to the file. */
     public void save() {
-        Utils.writeObject(Repository.removeStage, this);
+        Utils.writeObject(Repository.REMOVE_STAGE, this);
     }
 
     /** Return True if removeStage is Empty. */

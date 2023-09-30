@@ -30,7 +30,7 @@ public class Repository {
 
     /** Staging Area. */
     public static final File ADD_STAGE = join(GITLET_DIR, "addStage");
-    public static final File REMOVE_STAGE = join(GITLET_DIR, "REMOVE_STAGE");
+    public static final File REMOVE_STAGE = join(GITLET_DIR, "removeStage");
 
     /** The Commits, Blobs directory. */
 
