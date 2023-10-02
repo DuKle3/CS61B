@@ -526,8 +526,13 @@ public class Repository {
      * @param args
      */
     public static void reset(String[] args) {
-        String commitHashCode = args[1];
+        String commitHashCode = abbreviateHashCode(args[1]);
         AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
+        untrackedFileMessage(getCurrentCommit(), Commit.readFromFile(commitHashCode));
+        for (String fileName : Utils.plainFilenamesIn(CWD)) {
+            File file = join(CWD, fileName);
+            file.delete();
+        }
         checkoutCommit(commitHashCode);
         stagingArea.clean();
         stagingArea.save();
@@ -651,8 +656,8 @@ public class Repository {
             branchContent = new String(branchBlob.getContent(), StandardCharsets.UTF_8);
         }
 
-        String mergeContent = "<<<<<<< HEAD" + "\n" + headContent +
-                "=======\n" + branchContent + ">>>>>>>\n";
+        String mergeContent = "<<<<<<< HEAD" + "\n" + headContent + "=======\n"
+                + branchContent + ">>>>>>>\n";
         byte[] mergeByteContent = mergeContent.getBytes();
         File mergeFile = join(CWD, fileName);
         Utils.writeContents(mergeFile, mergeByteContent);
@@ -720,4 +725,16 @@ public class Repository {
             System.exit(0);
         }
     }
+
+    /** Return the Hash Code from abbreviated Given UID. */
+    private static String abbreviateHashCode(String commitId) {
+        List<String> commits = Utils.plainFilenamesIn(Directory.COMMIT_DIR);
+        for (String commit : commits) {
+            if (commitId.equals(commit.substring(0, commitId.length()))) {
+                commitId = commit;
+            }
+        }
+        return commitId;
+    }
+
 }
