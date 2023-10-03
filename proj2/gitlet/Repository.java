@@ -577,8 +577,12 @@ public class Repository {
             String splitFileHashCode = splitPoint.getBlobs().get(fileName);
             boolean inHead = headMap.containsKey(fileName);
             boolean inBranch = branchMap.containsKey(fileName);
-            boolean modifiedInHead = inHead && !headMap.get(fileName).equals(splitFileHashCode);
-            boolean modifiedInBranch = inBranch && !branchMap.get(fileName).equals(splitFileHashCode);
+            boolean modifiedInHead = inHead
+                    &&
+                    !headMap.get(fileName).equals(splitFileHashCode);
+            boolean modifiedInBranch = inBranch
+                    &&
+                    !branchMap.get(fileName).equals(splitFileHashCode);
             if (inHead && inBranch) {
                 if (modifiedInHead && !modifiedInBranch) {
                     continue;
