@@ -41,7 +41,8 @@ public class Repository {
      */
     public static void init() {
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control " +
+            System.out.println("A Gitlet version-control "
+                    +
                     "system already exists in the current directory.");
             System.exit(0);
         }
@@ -443,7 +444,8 @@ public class Repository {
         // and not present in the checked-out branch are deleted.
         for (String fileName : fileNames) {
             if (!currentCommit.contain(fileName) && branchCommit.contain(fileName)) {
-                System.out.println("There is an untracked file in the way; " +
+                System.out.println("There is an untracked file in the way; "
+                        +
                         "delete it, or add and commit it first.");
                 System.exit(0);
             } else if (currentCommit.contain(fileName) && !branchCommit.contain(fileName)) {
@@ -463,7 +465,8 @@ public class Repository {
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
         for (String fileName : fileNames) {
             if (!currentCommit.contain(fileName) && branchCommit.contain(fileName)) {
-                System.out.println("There is an untracked file in the way;" +
+                System.out.println("There is an untracked file in the way;"
+                        +
                         " delete it, or add and commit it first.");
                 System.exit(0);
             }
@@ -577,28 +580,21 @@ public class Repository {
             boolean modifiedInHead = inHead && !headMap.get(fileName).equals(splitFileHashCode);
             boolean modifiedInBranch = inBranch && !branchMap.get(fileName).equals(splitFileHashCode);
             if (inHead && inBranch) {
-                // 1. modified in head but not other -> head
                 if (modifiedInHead && !modifiedInBranch) {
                     continue;
                 } else if (!modifiedInHead && modifiedInBranch) {
-                    // 2. modified in other but not head -> other
                     headMap.put(fileName, headMap.get(fileName));
                     checkoutCommitFileName(branch, fileName);
                 } else if (modifiedInHead && modifiedInBranch) {
-                    /* 3. modified in both:
-                         a. in same way.
-                         b. conflict
-                     */
                     if (headMap.get(fileName).equals(branchMap.get(fileName))) {
+                        continue;
                     } else {
                         Blob mergeBlob = mergeConflict(fileName, headMap.get(fileName), branchMap.get(fileName));
                         encounterConflict = true;
                         headMap.put(fileName, mergeBlob.getHashCode());
                     }
                 }
-            }
-            // 6. unmodified in head but not present in others.
-            else if (inHead && !inBranch) {
+            } else if (inHead && !inBranch) {
                 if (!modifiedInHead) {
                     headMap.remove(fileName);
                     File file = join(CWD, fileName);
@@ -608,10 +604,9 @@ public class Repository {
                     encounterConflict = true;
                     headMap.put(fileName, mergeBlob.getHashCode());
                 }
-            }
-            // 7. unmodified in branch but not present in head.
-            else if (!inHead && inBranch) {
+            } else if (!inHead && inBranch) {
                 if (!modifiedInBranch) {
+                    continue;
                 } else {
                     Blob mergeBlob = mergeConflict(fileName, null, branchMap.get(fileName));
                     encounterConflict = true;
@@ -619,8 +614,6 @@ public class Repository {
                 }
             }
         }
-        // 4. not in split nor other but in head -> head
-        // 5. not in split nor head but in other -> other
         for (String fileName : branchMap.keySet()) {
             boolean notInSplit = !splitMap.containsKey(fileName);
             boolean notInHead = !headMap.containsKey(fileName);
@@ -669,14 +662,12 @@ public class Repository {
         if (head.getHashCode().equals(branch.getHashCode())) {
             System.out.println("Cannot merge a branch with itself.");
             System.exit(0);
-        }
-        // branch == splitPoint
-        else if (branch.getHashCode().equals(splitPoint.getHashCode())) {
+        } else if (branch.getHashCode().equals(splitPoint.getHashCode())) {
+            // branch == splitPoint
             System.out.println("Given branch is an ancestor of the current branch.");
             System.exit(0);
-        }
-        // head == splitPoint
-        else if (head.getHashCode().equals(splitPoint.getHashCode())) {
+        } else if (head.getHashCode().equals(splitPoint.getHashCode())) {
+            // head == splitPoint
             System.out.println("Current branch fast-forwarded.");
             checkoutCommit(branch.getHashCode());
         }
@@ -737,5 +728,4 @@ public class Repository {
         }
         return commitId;
     }
-
 }
