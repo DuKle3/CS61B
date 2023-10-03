@@ -587,13 +587,13 @@ public class Repository {
                 if (!modifiedInHead && modifiedInBranch) {
                     headMap.put(fileName, headMap.get(fileName));
                     checkoutCommitFileName(branch, fileName);
-                } else if (modifiedInHead && modifiedInBranch) {
-                    if (!headMap.get(fileName).equals(branchMap.get(fileName))) {
-                        Blob mergeBlob =
-                                mergeConflict(fileName, headMap.get(fileName), branchMap.get(fileName));
-                        encounterConflict = true;
-                        headMap.put(fileName, mergeBlob.getHashCode());
-                    }
+                } else if (modifiedInHead && modifiedInBranch
+                        && !headMap.get(fileName).equals(branchMap.get(fileName))) {
+                    Blob mergeBlob =
+                            mergeConflict(fileName, headMap.get(fileName),
+                                    branchMap.get(fileName));
+                    encounterConflict = true;
+                    headMap.put(fileName, mergeBlob.getHashCode());
                 }
             } else if (inHead && !inBranch) {
                 if (!modifiedInHead) {
