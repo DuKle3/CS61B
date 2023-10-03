@@ -55,10 +55,10 @@ public class Commit implements Serializable {
     }
 
     /** Return a new Commit with identical blobs, and update the date, parent, message. */
-    public Commit copyWithMessage(String message) {
-        List<String> parentCommits = new ArrayList<>();
-        parentCommits.add(this.id);
-        return new Commit(message, parentCommits, this.blobs);
+    public Commit copyWithMessage(String newMessage) {
+        List<String> newParentCommits = new ArrayList<>();
+        newParentCommits.add(this.id);
+        return new Commit(newMessage, newParentCommits, this.blobs);
     }
     /** Return Commit in the COMMIT_DIR with this hashCode. */
     public static Commit readFromFile(String commitHashCode) {

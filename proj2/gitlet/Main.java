@@ -2,7 +2,7 @@ package gitlet;
 
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
+ *  @author DuKle3
  */
 public class Main {
 
@@ -15,7 +15,7 @@ public class Main {
             System.exit(0);
         }
         String firstArg = args[0];
-        switch(firstArg) {
+        switch (firstArg) {
             case "init":
                 ArgumentCheck.initArgumentCheck(args);
                 Repository.init();
@@ -55,7 +55,6 @@ public class Main {
                 ArgumentCheck.checkoutArgument(args);
                 Repository.checkout(args);
                 break;
-            // TODO: FILL THE REST IN
             case "branch":
                 ArgumentCheck.argumentCheck(args, 2);
                 Repository.branch(args);
@@ -68,7 +67,7 @@ public class Main {
                 ArgumentCheck.argumentCheck(args, 2);
                 Repository.reset(args);
                 break;
-            case "merge" :
+            case "merge":
                 ArgumentCheck.argumentCheck(args, 2);
                 Repository.merge(args);
                 break;

@@ -1,6 +1,5 @@
 package gitlet;
 
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -42,7 +41,8 @@ public class Repository {
      */
     public static void init() {
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.out.println("A Gitlet version-control " +
+                    "system already exists in the current directory.");
             System.exit(0);
         }
         // Initialize Gitlet Folder
@@ -72,12 +72,12 @@ public class Repository {
      *  2. create empty REMOVE_STAGE
      */
     private static void initStagingArea() {
-        AddStage ADD_STAGE = new AddStage();
-        RemoveStage REMOVE_STAGE = new RemoveStage();
+        AddStage newAddStage = new AddStage();
+        RemoveStage newRemoveStage = new RemoveStage();
         File addStageFile = join(GITLET_DIR, "addStage");
         File removeStageFile = join(GITLET_DIR, "removeStage");
-        Utils.writeObject(addStageFile, ADD_STAGE);
-        Utils.writeObject(removeStageFile, REMOVE_STAGE);
+        Utils.writeObject(addStageFile, newAddStage);
+        Utils.writeObject(removeStageFile, newRemoveStage);
     }
 
     /** Add the file to the staging area.
@@ -308,7 +308,8 @@ public class Repository {
     /** a1. Tracked in the current commit, changed in the working directory, but not staged
      *  a2. Staged for addition, but with different contents than in the working directory
      *  b1. Staged for addition, but deleted in the working directory
-     *  b2. Not staged for removal, but tracked in the current commit and deleted from the working directory.
+     *  b2. Not staged for removal,
+     *  but tracked in the current commit and deleted from the working directory.
      */
     private static void modificationNotStagedStatus() {
         System.out.println("=== Modifications Not Staged For Commit ===");
@@ -324,8 +325,10 @@ public class Repository {
             boolean inCommit = currentCommit.contain(fileName);
             boolean inStagingArea = stagingArea.contain(fileName);
 
-            boolean commitHasSameFile = inCommit && currentCommit.getBlobs().get(fileName).equals(hashCode);
-            boolean stagingAreaHasSameFile = inStagingArea && stagingArea.getAddStage().get(fileName).equals(hashCode);
+            boolean commitHasSameFile = inCommit
+                    && currentCommit.getBlobs().get(fileName).equals(hashCode);
+            boolean stagingAreaHasSameFile = inStagingArea
+                    && stagingArea.getAddStage().get(fileName).equals(hashCode);
 
             if (inCommit && !inStagingArea && !commitHasSameFile) {
                 modificationStatus(fileName);
@@ -398,16 +401,20 @@ public class Repository {
             System.exit(0);
         }
     }
-    /** Take the version of the file exist in the head Commit, and put it in the working directory. */
+    /** Take the version of the file exist in the head Commit,
+     *  and put it in the working directory. */
     private static void checkoutHeadFile(String fileName) {
         Commit currentCommit = getCurrentCommit();
         String blobHashCode = currentCommit.getBlobs().get(fileName);
         checkoutCommitFileName(currentCommit, fileName);
     }
-    /** Takes all files in the commit at the head of the given branch, and puts them in the working directory
+    /** Takes all files in the commit at the head of the given branch,
+     *  and puts them in the working directory
      *  overwriting the versions of the files if they exist.
+     *
      *  1. The given branch will now be considered the current branch.
-     *  2. Any files that are tracked in the current branch but are not present in the checked-out branch are deleted.
+     *  2. Any files that are tracked in the current branch
+     *     but are not present in the checked-out branch are deleted.
      *  3. Staging Area is cleared, unless checkout-out branch is the current branch.
      */
     private static void checkoutBranchFile(String branchName) {
@@ -431,10 +438,13 @@ public class Repository {
         // file is untracked in the current branch and would be overwritten by the checkout.
         // 1. branch.contain
         // 2. current.notContain
-        // file is tracked in the current branch and not present in the checked-out branch are deleted.
+
+        // file is tracked in the current branch
+        // and not present in the checked-out branch are deleted.
         for (String fileName : fileNames) {
             if (!currentCommit.contain(fileName) && branchCommit.contain(fileName)) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way; " +
+                        "delete it, or add and commit it first.");
                 System.exit(0);
             } else if (currentCommit.contain(fileName) && !branchCommit.contain(fileName)) {
                 File file = join(CWD, fileName);
@@ -447,12 +457,14 @@ public class Repository {
         changeActiveBranch(branchName);
     }
 
+    /** Exit and print out error message if there is a file will be overwritten. */
     private static void untrackedFileMessage(Commit currentCommit, Commit branchCommit) {
         AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
         List<String> fileNames = Utils.plainFilenamesIn(CWD);
         for (String fileName : fileNames) {
             if (!currentCommit.contain(fileName) && branchCommit.contain(fileName)) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way;" +
+                        " delete it, or add and commit it first.");
                 System.exit(0);
             }
         }
@@ -473,14 +485,14 @@ public class Repository {
     }
     private static void checkoutCommitFile(String commitHashCode, String fileName) {
         File commitFile = join(Directory.COMMIT_DIR, commitHashCode);
-        if (!commitFile.exists()){
+        if (!commitFile.exists()) {
             System.out.println("No commit with that id exits.");
             System.exit(0);
         }
         checkoutCommitFileName(Commit.readFromFile(commitHashCode), fileName);
     }
     /** Take the version of the file exist in the commit with the given id. */
-    private static void checkoutCommitFileName(Commit commit , String fileName) {
+    private static void checkoutCommitFileName(Commit commit, String fileName) {
         checkFileExistInCommit(commit, fileName);
         String blobHashCode = commit.getBlobs().get(fileName);
         Blob checkoutBlob = Blob.readFromFile(blobHashCode);
@@ -548,27 +560,22 @@ public class Repository {
         checkBranchExist(branchName);
         File branchFile = join(Directory.HEADS_DIR, branchName);
         String branchHashCode = Utils.readContentsAsString(branchFile);
-
         Commit head = getCurrentCommit();
         Commit branch = Commit.readFromFile(branchHashCode);
         Commit splitPoint = SplitPoint.splitPoint(head, branch);
         mergeAncestorMessage(head, branch, splitPoint);
         AddStage stagingArea = Utils.readObject(ADD_STAGE, AddStage.class);
-
         Map<String, String> headMap = head.getBlobs();
         Map<String, String> branchMap = branch.getBlobs();
         Map<String, String> splitMap = splitPoint.getBlobs();
-
         boolean encounterConflict = false;
         // Iterate SplitPoint Files.
         for (String fileName : splitPoint.getBlobs().keySet()) {
             String splitFileHashCode = splitPoint.getBlobs().get(fileName);
             boolean inHead = headMap.containsKey(fileName);
             boolean inBranch = branchMap.containsKey(fileName);
-
             boolean modifiedInHead = inHead && !headMap.get(fileName).equals(splitFileHashCode);
             boolean modifiedInBranch = inBranch && !branchMap.get(fileName).equals(splitFileHashCode);
-
             if (inHead && inBranch) {
                 // 1. modified in head but not other -> head
                 if (modifiedInHead && !modifiedInBranch) {
@@ -583,7 +590,6 @@ public class Repository {
                          b. conflict
                      */
                     if (headMap.get(fileName).equals(branchMap.get(fileName))) {
-                        continue;
                     } else {
                         Blob mergeBlob = mergeConflict(fileName, headMap.get(fileName), branchMap.get(fileName));
                         encounterConflict = true;
@@ -606,7 +612,6 @@ public class Repository {
             // 7. unmodified in branch but not present in head.
             else if (!inHead && inBranch) {
                 if (!modifiedInBranch) {
-                    continue;
                 } else {
                     Blob mergeBlob = mergeConflict(fileName, null, branchMap.get(fileName));
                     encounterConflict = true;
@@ -614,7 +619,6 @@ public class Repository {
                 }
             }
         }
-
         // 4. not in split nor other but in head -> head
         // 5. not in split nor head but in other -> other
         for (String fileName : branchMap.keySet()) {
@@ -625,7 +629,6 @@ public class Repository {
                 checkoutCommitFileName(branch, fileName);
             }
         }
-
         if (encounterConflict) {
             System.out.println("Encountered a merge conflict.");
         }
@@ -635,9 +638,7 @@ public class Repository {
         String newCommitHashCode = newCommit.getHashCode();
         newCommit.updateBlobs(headMap);
         newCommit.addSecondParent(branch.getHashCode());
-
         moveActiveBranch(newCommitHashCode);
-
         newCommit.save();
         stagingArea.save();
     }
