@@ -1,7 +1,6 @@
 package gitlet;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static gitlet.Utils.*;
@@ -584,16 +583,13 @@ public class Repository {
                     &&
                     !branchMap.get(fileName).equals(splitFileHashCode);
             if (inHead && inBranch) {
-                if (modifiedInHead && !modifiedInBranch) {
-                    continue;
-                } else if (!modifiedInHead && modifiedInBranch) {
+                if (!modifiedInHead && modifiedInBranch) {
                     headMap.put(fileName, headMap.get(fileName));
                     checkoutCommitFileName(branch, fileName);
                 } else if (modifiedInHead && modifiedInBranch) {
-                    if (headMap.get(fileName).equals(branchMap.get(fileName))) {
-                        continue;
-                    } else {
-                        Blob mergeBlob = mergeConflict(fileName, headMap.get(fileName), branchMap.get(fileName));
+                    if (!headMap.get(fileName).equals(branchMap.get(fileName))) {
+                        Blob mergeBlob =
+                                mergeConflict(fileName, headMap.get(fileName), branchMap.get(fileName));
                         encounterConflict = true;
                         headMap.put(fileName, mergeBlob.getHashCode());
                     }
@@ -609,9 +605,7 @@ public class Repository {
                     headMap.put(fileName, mergeBlob.getHashCode());
                 }
             } else if (!inHead && inBranch) {
-                if (!modifiedInBranch) {
-                    continue;
-                } else {
+                if (modifiedInBranch) {
                     Blob mergeBlob = mergeConflict(fileName, null, branchMap.get(fileName));
                     encounterConflict = true;
                     headMap.put(fileName, mergeBlob.getHashCode());
