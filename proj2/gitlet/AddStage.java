@@ -41,11 +41,6 @@ public class AddStage implements Serializable {
         this.addStage.remove(fileName);
     }
 
-    /** Untracked the file in the staging area. */
-    public void removeStagingArea(String fileName) {
-        String hashCode = addStage.get(fileName);
-        this.addStage.remove(fileName);
-    }
 
     /** Clean the Staging Area.
      *  1. remove all the files in the directory.

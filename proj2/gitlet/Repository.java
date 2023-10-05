@@ -135,7 +135,7 @@ public class Repository {
         RemoveStage removedStage = Utils.readObject(REMOVE_STAGE, RemoveStage.class);
         Commit currentCommit = getCurrentCommit();
         if (stagingArea.contain(removeFileName)) {
-            stagingArea.removeStagingArea(removeFileName);
+            stagingArea.remove(removeFileName);
             stagingArea.save();
         } else if (currentCommit.contain(removeFileName)) {
             String removeFileId = currentCommit.getBlobs().get(removeFileName);
@@ -510,7 +510,7 @@ public class Repository {
         }
     }
 
-    /** Create new branch with the given name, and points it at the current head commit. */
+    /** Create new branch with the given name */
     public static void branch(String[] args) {
         String branchName = args[1];
         File branchFile = join(Directory.HEADS_DIR, branchName);

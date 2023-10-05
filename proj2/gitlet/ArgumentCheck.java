@@ -49,7 +49,7 @@ public class ArgumentCheck {
         System.out.println("Not in an initialized Gitlet directory.");
         System.exit(0);
     }
-    /** Return true if .gitlet folder exist. */
+    /** Return true if .gitlet folder not exist. */
     private static boolean nonInitialized() {
         return !Repository.GITLET_DIR.exists();
     }
