@@ -21,6 +21,14 @@ public class TestMyHashMap {
         MyHashMap<Boolean, Integer> d = new MyHashMap<>();
     }
 
+    @Test
+    public void initialPutTest() {
+        MyHashMap<String, Integer> test1 = new MyHashMap<>();
+        for (int i = 0; i < 100; i++) {
+            test1.put("Index" + i, i);
+        }
+        test1.clear();
+    }
     //assumes put/size/containsKey/get work
     @Test
     public void sanityClearTest() {
