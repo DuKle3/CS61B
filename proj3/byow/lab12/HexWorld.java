@@ -37,7 +37,6 @@ public class HexWorld {
     /**
      * Adds a hexagon to the world at position P of size size.
      */
-
     public static void addHexagon(TETile[][] tiles, Position p, TETile type, int size) {
         if (size < 2) {
             return;
@@ -75,6 +74,7 @@ public class HexWorld {
             default: return Tileset.GRASS;
         }
     }
+
     /**
      * Draw a column of Hexagon with int size and int num to the world at Position p with TETile type.
      */
@@ -88,7 +88,6 @@ public class HexWorld {
         }
     }
 
-
     private static class Position {
         int x;
         int y;
@@ -97,7 +96,6 @@ public class HexWorld {
             this.x = x;
             this.y = y;
         }
-
         public Position shift(int dx, int dy) {
             return new Position(this.x + dx, this.y + dy);
         }
@@ -109,7 +107,6 @@ public class HexWorld {
         public Position getTopRightNeighbor(int hexSize) {
             return new Position(this.x + 2*hexSize - 1, this.y + hexSize);
         }
-
         public Position getBottomRightNeighbor(int hexSize) {
             return new Position(this.x + 2*hexSize - 1, this.y - hexSize);
         }
