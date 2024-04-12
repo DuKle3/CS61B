@@ -5,7 +5,7 @@ import byow.TileEngine.TETile;
 import byow.lab12.HexWorld;
 
 public class WorldGeneratorVisualTest {
-    private static final int WIDTH = 50;
+    private static final int WIDTH = 70;
     private static final int HEIGHT = 50;
 
 

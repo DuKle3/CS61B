@@ -16,4 +16,32 @@ public class Position {
         }
         return false;
     }
+
+    public Boolean isOnLeftOf(Position v) {
+        if (this.x < v.x) {
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean isOnRightOf(Position v) {
+        if (this.x > v.x) {
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean isOnTopOf(Position v) {
+        if (this.y > v.y) {
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean isOnDownOf(Position v) {
+        if (this.y < v.y) {
+            return true;
+        }
+        return false;
+    }
 }

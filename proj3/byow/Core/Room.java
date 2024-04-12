@@ -19,7 +19,23 @@ public class Room {
 
 
     // Return True if Room v and Room u are overlap.
-    public static Boolean overLap (Room v, Room u) {
+    public Boolean overLap (Room v) {
+        // check on the Right
+        if (this.bottomLeft.isOnRightOf(v.topRight)) {
+            return false;
+        }
+        // check on the Top
+        if (this.bottomLeft.isOnTopOf(v.topRight)) {
+            return false;
+        }
+        // check on the Left
+        if (this.topRight.isOnLeftOf(v.bottomLeft)) {
+            return false;
+        }
+        // check on the Down
+        if (this.topRight.isOnDownOf(v.bottomLeft)) {
+            return false;
+        }
         return true;
     }
 }
