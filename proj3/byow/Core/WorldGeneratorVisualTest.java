@@ -5,7 +5,7 @@ import byow.TileEngine.TETile;
 import byow.lab12.HexWorld;
 
 public class WorldGeneratorVisualTest {
-    private static final int WIDTH = 70;
+    private static final int WIDTH = 80;
     private static final int HEIGHT = 50;
 
 
@@ -15,7 +15,9 @@ public class WorldGeneratorVisualTest {
 
         TETile[][] world = new TETile[WIDTH][HEIGHT];
 
+
         // Initialize world
+        WorldGenerator.initializeParameter(world, 35239);
         WorldGenerator.fillBoardWithNothing(world);
 
         // Generate World

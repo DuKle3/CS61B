@@ -1,5 +1,8 @@
 package byow.Core;
 
+import afu.org.checkerframework.checker.oigj.qual.World;
+import byow.InputDemo.InputSource;
+import byow.InputDemo.StringInputDevice;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 
@@ -45,8 +48,29 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
+        InputSource inputSource = new StringInputDevice(input);
+        // get the seed
+        long seed = 0;
+        while (inputSource.possibleNextInput()) {
+            char c = Character.toUpperCase(inputSource.getNextKey());
+            if (c == 'N') {
+                continue;
+            }
+            if (c == 'S') {
+                break;
+            }
+            seed = seed * 10 + Character.getNumericValue(c);
+        }
 
-        TETile[][] finalWorldFrame = null;
+        TETile[][] finalWorldFrame = new TETile[WIDTH][HEIGHT];
+
+        // Initialize world
+        WorldGenerator.initializeParameter(finalWorldFrame, seed);
+        WorldGenerator.fillBoardWithNothing(finalWorldFrame);
+
+        // Generate World
+        WorldGenerator.generateWorld(finalWorldFrame);
+
         return finalWorldFrame;
     }
 }

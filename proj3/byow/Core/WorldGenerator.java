@@ -3,7 +3,6 @@ package byow.Core;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 import edu.princeton.cs.algs4.Queue;
-import org.apache.commons.math3.random.RandomGenerator;
 
 import java.util.*;
 
@@ -11,14 +10,14 @@ public class WorldGenerator {
 
     private static int WIDTH;
     private static int HEIGHT;
-    private static int ROOMSBOUND = 70;
+    private static final int ROOMSBOUND = 70;
     private static final String NORTH = "North";
     private static final String WEST = "West";
     private static final String SOUTH = "South";
     private static final String EAST = "East";
     private static List<Room> rooms = new ArrayList<Room>();
     private static List<Hallway> hallWays;
-    private static final long SEED = 2873123;
+    private static long SEED = 2873123;
     private static final Random RANDOM = new Random(SEED);
 
     /**
@@ -53,8 +52,8 @@ public class WorldGenerator {
      * @param r
      */
     public static void openRandomNumberDoor(Room r, int... atLeast) {
-        // number of doors
-        int n = RANDOM.nextInt(4) + 1;
+        // number of doors (1 ~ 4)
+        int n = RandomUtils.uniform(RANDOM, 1, 5);
         if (atLeast.length > 0) {
             n = atLeast[0];
         }
@@ -118,6 +117,7 @@ public class WorldGenerator {
         // Initialize
         fringe.enqueue(startingRoom);
 
+        // BFS order generate random rooms.
         while (!fringe.isEmpty() && rooms.size() < ROOMSBOUND) {
             Room thisRoom = fringe.dequeue();
             for (Door d : thisRoom.doors) {
@@ -127,8 +127,8 @@ public class WorldGenerator {
                     int generateTimes = 0;
 
                     do {
-                        // decide Room or Hallway
-                        Boolean isRoom = RANDOM.nextInt(3) == 0;
+                        // decide Room or Hallway, 0.4 for room.
+                        boolean isRoom = RandomUtils.bernoulli(RANDOM, 0.4);
                         newRoom = randomRoomWithDoor(d, isRoom);
                         generateTimes += 1;
                         // if overlap with others rooms, regenerate.
@@ -157,15 +157,15 @@ public class WorldGenerator {
      */
     private static Room randomRoomWithDoor(Door d, Boolean isRoom) {
         int width, length;
-        // Room's width, length bound
         if (isRoom) {
-            width = RANDOM.nextInt(6) + 4;
-            length = RANDOM.nextInt(6) + 4;
+            // Room's width, length (4 ~ 9)
+            width = RandomUtils.uniform(RANDOM, 4, 10);
+            length = RandomUtils.uniform(RANDOM, 4, 10);
         }
-        // Hallway's width, length bound
         else {
-            width = RANDOM.nextInt(2) + 3;
-            length = RANDOM.nextInt(6) + 5;
+            // Hallway's width (3, 4), length (5 ~ 10);
+            width = RandomUtils.uniform(RANDOM, 3, 5);
+            length = RandomUtils.uniform(RANDOM, 5, 11);
         }
         int topRightX = 0, topRightY = 0, bottomLeftX = 0, bottomLeftY = 0, dx, dy;
         Position newOpening = null;
@@ -275,29 +275,35 @@ public class WorldGenerator {
     }
 
     public static void fillBoardWithNothing(TETile[][] tiles) {
-        WIDTH = tiles.length;
-        HEIGHT = tiles[0].length;
         for (int x = 0; x < WIDTH; x++) {
             for (int y = 0; y < HEIGHT; y++) {
                 tiles[x][y] = Tileset.NOTHING;
             }
         }
     }
+    public static void initializeParameter(TETile[][] tiles, long seed) {
+        WIDTH = tiles.length;
+        HEIGHT = tiles[0].length;
+        SEED = seed;
+    }
+
+    public static Room randomStartingRoom() {
+        int x1 = RandomUtils.uniform(RANDOM, WIDTH / 2 - WIDTH / 10, WIDTH / 2);
+        int y1 = RandomUtils.uniform(RANDOM, HEIGHT / 2 - HEIGHT / 10, HEIGHT / 2);
+        int width = RandomUtils.uniform(RANDOM, 4, 9);
+        int height = RandomUtils.uniform(RANDOM, 4, 9);
+        Position bottomLeft = new Position(x1, y1);
+        Position topRight = new Position(x1 + width, y1 + height);
+        return new Room (bottomLeft, topRight);
+    }
 
     public static void generateWorld(TETile[][] world) {
-        Position x1 = new Position(20, 20);
-        Position x2 = new Position(26, 26);
-
-        Room startingRoom = new Room(x1, x2);
+        Room startingRoom = randomStartingRoom();
         rooms.add(startingRoom);
         openRandomNumberDoor(startingRoom, 4);
-
         generateRooms(world, startingRoom);
-
         for (Room r : rooms) {
             addRoom(world, r);
         }
-
-        System.out.println(rooms.size());
     }
 }
