@@ -17,8 +17,7 @@ public class WorldGenerator {
     private static final String EAST = "East";
     private static List<Room> rooms = new ArrayList<Room>();
     private static List<Hallway> hallWays;
-    private static long SEED = 2873123;
-    private static final Random RANDOM = new Random(SEED);
+    private static Random RANDOM = null;
 
     /**
      * Add the Room r into TETile[][] tiles (world).
@@ -284,7 +283,7 @@ public class WorldGenerator {
     public static void initializeParameter(TETile[][] tiles, long seed) {
         WIDTH = tiles.length;
         HEIGHT = tiles[0].length;
-        SEED = seed;
+        RANDOM = new Random(seed);
     }
 
     public static Room randomStartingRoom() {
