@@ -63,13 +63,13 @@ public class Engine {
         }
 
         TETile[][] finalWorldFrame = new TETile[WIDTH][HEIGHT];
+        WorldGenerator g = new WorldGenerator(WIDTH, HEIGHT, seed);
 
         // Initialize world
-        WorldGenerator.initializeParameter(finalWorldFrame, seed);
-        WorldGenerator.fillBoardWithNothing(finalWorldFrame);
+        g.fillBoardWithNothing(finalWorldFrame);
 
         // Generate World
-        WorldGenerator.generateWorld(finalWorldFrame);
+        g.generateWorld(finalWorldFrame);
 
         return finalWorldFrame;
     }

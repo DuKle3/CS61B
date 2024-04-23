@@ -15,13 +15,13 @@ public class WorldGeneratorVisualTest {
 
         TETile[][] world = new TETile[WIDTH][HEIGHT];
 
+        WorldGenerator g = new WorldGenerator(WIDTH, HEIGHT, 1235);
 
         // Initialize world
-        WorldGenerator.initializeParameter(world, 35239);
-        WorldGenerator.fillBoardWithNothing(world);
+        g.fillBoardWithNothing(world);
 
         // Generate World
-        WorldGenerator.generateWorld(world);
+        g.generateWorld(world);
 
         ter.renderFrame(world);
     }

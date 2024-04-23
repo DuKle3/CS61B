@@ -8,16 +8,16 @@ import java.util.*;
 
 public class WorldGenerator {
 
-    private static int WIDTH;
-    private static int HEIGHT;
+    int width;
+    int height;
+    Random random;
+    List<Room> rooms;
+    List<Hallway> hallWays;
     private static final int ROOMSBOUND = 70;
     private static final String NORTH = "North";
     private static final String WEST = "West";
     private static final String SOUTH = "South";
     private static final String EAST = "East";
-    private static List<Room> rooms = new ArrayList<Room>();
-    private static List<Hallway> hallWays;
-    private static Random RANDOM = null;
 
     /**
      * Add the Room r into TETile[][] tiles (world).
@@ -50,9 +50,9 @@ public class WorldGenerator {
      * 
      * @param r
      */
-    public static void openRandomNumberDoor(Room r, int... atLeast) {
+    public void openRandomNumberDoor(Room r, int... atLeast) {
         // number of doors (1 ~ 4)
-        int n = RandomUtils.uniform(RANDOM, 1, 5);
+        int n = RandomUtils.uniform(random, 1, 5);
         if (atLeast.length > 0) {
             n = atLeast[0];
         }
@@ -66,7 +66,7 @@ public class WorldGenerator {
 
         // for each door, choose random direction.
         for (int i = 0; i < n; i++) {
-            int index = RANDOM.nextInt(directions.size());
+            int index = random.nextInt(directions.size());
             String direction = directions.get(index);
             directions.remove(index);
             // for peculiar direction, add the door.
@@ -78,29 +78,29 @@ public class WorldGenerator {
      * Open the RANDOM door for Given r and Given direction.
      * Add the door to r.doors
      */
-    public static void openRandomDoorWithDirection(Room r, String direction) {
+    public void openRandomDoorWithDirection(Room r, String direction) {
         int dx, dy;
         Position p;
         switch (direction) {
             case NORTH:
                 // -2 : minus the corner
-                dx = RANDOM.nextInt(r.width - 2);
+                dx = random.nextInt(r.width - 2);
                 // add the door int the wall
                 p = new Position(r.bottomLeft.x + dx + 1, r.topRight.y);
                 r.doors.add(new Door(p, direction));
                 break;
             case EAST:
-                dy = RANDOM.nextInt(r.height - 2);
+                dy = random.nextInt(r.height - 2);
                 p = new Position(r.topRight.x, r.bottomLeft.y + dy + 1);
                 r.doors.add(new Door(p, direction));
                 break;
             case SOUTH:
-                dx = RANDOM.nextInt(r.width - 2);
+                dx = random.nextInt(r.width - 2);
                 p = new Position(r.bottomLeft.x + dx + 1, r.bottomLeft.y);
                 r.doors.add(new Door(p, direction));
                 break;
             case WEST:
-                dy = RANDOM.nextInt(r.height - 2);
+                dy = random.nextInt(r.height - 2);
                 p = new Position(r.bottomLeft.x, r.bottomLeft.y + dy + 1);
                 r.doors.add(new Door(p, direction));
                 break;
@@ -111,7 +111,7 @@ public class WorldGenerator {
      * Use the startingRoom to expand the world.
      * (Only Room for now)
      */
-    public static void generateRooms(TETile[][] tiles, Room startingRoom) {
+    public void generateRooms(TETile[][] tiles, Room startingRoom) {
         Queue<Room> fringe = new Queue<>();
         // Initialize
         fringe.enqueue(startingRoom);
@@ -127,7 +127,7 @@ public class WorldGenerator {
 
                     do {
                         // decide Room or Hallway, 0.4 for room.
-                        boolean isRoom = RandomUtils.bernoulli(RANDOM, 0.4);
+                        boolean isRoom = RandomUtils.bernoulli(random, 0.4);
                         newRoom = randomRoomWithDoor(d, isRoom);
                         generateTimes += 1;
                         // if overlap with others rooms, regenerate.
@@ -154,17 +154,17 @@ public class WorldGenerator {
      * This Room has origin door versus d.
      * and Return null if the room is outside the world.
      */
-    private static Room randomRoomWithDoor(Door d, Boolean isRoom) {
-        int width, length;
+    private Room randomRoomWithDoor(Door d, Boolean isRoom) {
+        int roomWidth, roomLength;
         if (isRoom) {
             // Room's width, length (4 ~ 9)
-            width = RandomUtils.uniform(RANDOM, 4, 10);
-            length = RandomUtils.uniform(RANDOM, 4, 10);
+            roomWidth = RandomUtils.uniform(random, 4, 10);
+            roomLength = RandomUtils.uniform(random, 4, 10);
         }
         else {
             // Hallway's width (3, 4), length (5 ~ 10);
-            width = RandomUtils.uniform(RANDOM, 3, 5);
-            length = RandomUtils.uniform(RANDOM, 5, 11);
+            roomWidth = RandomUtils.uniform(random, 3, 5);
+            roomLength = RandomUtils.uniform(random, 5, 11);
         }
         int topRightX = 0, topRightY = 0, bottomLeftX = 0, bottomLeftY = 0, dx, dy;
         Position newOpening = null;
@@ -172,38 +172,38 @@ public class WorldGenerator {
         switch (d.direction) {
             case NORTH:
                 newOpening = new Position(d.opening.x, d.opening.y + 1);
-                topRightY = newOpening.y + length - 1;
+                topRightY = newOpening.y + roomLength - 1;
                 bottomLeftY = newOpening.y;
-                dx = RANDOM.nextInt(width - 2) + 1;
+                dx = random.nextInt(roomWidth - 2) + 1;
                 bottomLeftX = newOpening.x - dx;
-                topRightX = bottomLeftX + width - 1;
+                topRightX = bottomLeftX + roomWidth - 1;
                 newDirection = SOUTH;
                 break;
             case EAST:
                 newOpening = new Position(d.opening.x + 1, d.opening.y);
                 bottomLeftX = newOpening.x;
-                topRightX = newOpening.x + length - 1;
-                dy = RANDOM.nextInt(width - 2) + 1;
+                topRightX = newOpening.x + roomLength - 1;
+                dy = random.nextInt(roomWidth - 2) + 1;
                 bottomLeftY = newOpening.y - dy;
-                topRightY = bottomLeftY + width - 1;
+                topRightY = bottomLeftY + roomWidth - 1;
                 newDirection = WEST;
                 break;
             case SOUTH:
                 newOpening = new Position(d.opening.x, d.opening.y - 1);
                 topRightY = newOpening.y;
-                bottomLeftY = topRightY - length + 1;
-                dx = RANDOM.nextInt(width - 2) + 1;
+                bottomLeftY = topRightY - roomLength + 1;
+                dx = random.nextInt(roomWidth - 2) + 1;
                 bottomLeftX = newOpening.x - dx;
-                topRightX = bottomLeftX + width - 1;
+                topRightX = bottomLeftX + roomWidth - 1;
                 newDirection = NORTH;
                 break;
             case WEST:
                 newOpening = new Position(d.opening.x - 1, d.opening.y);
-                bottomLeftX = newOpening.x - length + 1;
+                bottomLeftX = newOpening.x - roomLength + 1;
                 topRightX = newOpening.x;
-                dy = RANDOM.nextInt(width - 2) + 1;
+                dy = random.nextInt(roomLength - 2) + 1;
                 bottomLeftY = newOpening.y - dy;
-                topRightY = bottomLeftY + width - 1;
+                topRightY = bottomLeftY + roomWidth - 1;
                 newDirection = EAST;
                 break;
         }
@@ -211,8 +211,8 @@ public class WorldGenerator {
         Position bottomLeft = new Position(bottomLeftX, bottomLeftY);
 
         // If the Position is outside the world.
-        if (topRight.checkValid(WIDTH, HEIGHT)
-                || bottomLeft.checkValid(WIDTH, HEIGHT)) {
+        if (topRight.checkValid(width, height)
+                || bottomLeft.checkValid(width, height)) {
             return null;
         }
 
@@ -227,7 +227,7 @@ public class WorldGenerator {
 
     // Return true if the door d have space to span new room. (at least is not face
     // something else)
-    private static Boolean doorHaveSpace(TETile[][] tiles, Door d) {
+    private Boolean doorHaveSpace(TETile[][] tiles, Door d) {
         int x = 0;
         int y = 0;
         switch (d.direction) {
@@ -249,7 +249,7 @@ public class WorldGenerator {
             }
         }
         // outside the world
-        if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) {
+        if (x < 0 || y < 0 || x >= width || y >= height) {
             return false;
         }
 
@@ -264,7 +264,7 @@ public class WorldGenerator {
     /**
      * Return true if Room r is overlapping with others Room.
      */
-    public static Boolean ifOverlap(Room r) {
+    public Boolean ifOverlap(Room r) {
         for (Room v: rooms) {
             if (r.overLap(v)) {
                 return true;
@@ -273,30 +273,25 @@ public class WorldGenerator {
         return false;
     }
 
-    public static void fillBoardWithNothing(TETile[][] tiles) {
-        for (int x = 0; x < WIDTH; x++) {
-            for (int y = 0; y < HEIGHT; y++) {
+    public void fillBoardWithNothing(TETile[][] tiles) {
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
                 tiles[x][y] = Tileset.NOTHING;
             }
         }
     }
-    public static void initializeParameter(TETile[][] tiles, long seed) {
-        WIDTH = tiles.length;
-        HEIGHT = tiles[0].length;
-        RANDOM = new Random(seed);
-    }
 
-    public static Room randomStartingRoom() {
-        int x1 = RandomUtils.uniform(RANDOM, WIDTH / 2 - WIDTH / 10, WIDTH / 2);
-        int y1 = RandomUtils.uniform(RANDOM, HEIGHT / 2 - HEIGHT / 10, HEIGHT / 2);
-        int width = RandomUtils.uniform(RANDOM, 4, 9);
-        int height = RandomUtils.uniform(RANDOM, 4, 9);
+    public Room randomStartingRoom() {
+        int x1 = RandomUtils.uniform(random, width / 2 - width / 10, width / 2);
+        int y1 = RandomUtils.uniform(random, height / 2 - height / 10, height / 2);
+        int width = RandomUtils.uniform(random, 4, 9);
+        int height = RandomUtils.uniform(random, 4, 9);
         Position bottomLeft = new Position(x1, y1);
         Position topRight = new Position(x1 + width, y1 + height);
         return new Room (bottomLeft, topRight);
     }
 
-    public static void generateWorld(TETile[][] world) {
+    public void generateWorld(TETile[][] world) {
         Room startingRoom = randomStartingRoom();
         rooms.add(startingRoom);
         openRandomNumberDoor(startingRoom, 4);
@@ -304,5 +299,12 @@ public class WorldGenerator {
         for (Room r : rooms) {
             addRoom(world, r);
         }
+    }
+
+    public WorldGenerator(int width, int height, long seed) {
+        this.width = width;
+        this.height = height;
+        this.random = new Random(seed);
+        this.rooms = new ArrayList<>();
     }
 }
