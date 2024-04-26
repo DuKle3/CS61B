@@ -48,29 +48,14 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-        InputSource inputSource = new StringInputDevice(input);
-        // get the seed
-        long seed = 0;
-        while (inputSource.possibleNextInput()) {
-            char c = Character.toUpperCase(inputSource.getNextKey());
-            if (c == 'N') {
-                continue;
-            }
-            if (c == 'S') {
-                break;
-            }
-            seed = seed * 10 + Character.getNumericValue(c);
-        }
 
-        TETile[][] finalWorldFrame = new TETile[WIDTH][HEIGHT];
-        WorldGenerator g = new WorldGenerator(WIDTH, HEIGHT, seed);
+        // 1. get the seed
+        long seed = Utils.parseTheSeed(input);
+        Game g = new Game(seed);
 
-        // Initialize world
-        g.fillBoardWithNothing(finalWorldFrame);
-
-        // Generate World
-        g.generateWorld(finalWorldFrame);
+        // 3. create player
 
         return finalWorldFrame;
     }
+
 }

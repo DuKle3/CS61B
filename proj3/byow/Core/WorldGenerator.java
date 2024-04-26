@@ -1,5 +1,6 @@
 package byow.Core;
 
+import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 import edu.princeton.cs.algs4.Queue;
@@ -12,8 +13,8 @@ public class WorldGenerator {
     int height;
     Random random;
     List<Room> rooms;
-    List<Hallway> hallWays;
-    private static final int ROOMSBOUND = 70;
+    Player player;
+    private static final int ROOMSBOUND = 4;
     private static final String NORTH = "North";
     private static final String WEST = "West";
     private static final String SOUTH = "South";
@@ -39,7 +40,7 @@ public class WorldGenerator {
             }
             for (Door d : r.doors) {
                 if (d.opened) {
-                    tiles[d.opening.x][d.opening.y] = Tileset.FLOOR;
+                    tiles[d.opening.x][d.opening.y] = Tileset.UNLOCKED_DOOR;
                 }
             }
         }
@@ -144,6 +145,8 @@ public class WorldGenerator {
                     // TODO: distinguish the hallway and room.
                     rooms.add(newRoom);
                     openRandomNumberDoor(newRoom);
+                    // addRoom(tiles, newRoom);
+                    // System.out.println(TETile.toString(tiles));
                 }
             }
         }
@@ -201,7 +204,7 @@ public class WorldGenerator {
                 newOpening = new Position(d.opening.x - 1, d.opening.y);
                 bottomLeftX = newOpening.x - roomLength + 1;
                 topRightX = newOpening.x;
-                dy = random.nextInt(roomLength - 2) + 1;
+                dy = random.nextInt(roomWidth - 2) + 1;
                 bottomLeftY = newOpening.y - dy;
                 topRightY = bottomLeftY + roomWidth - 1;
                 newDirection = EAST;
@@ -291,15 +294,28 @@ public class WorldGenerator {
         return new Room (bottomLeft, topRight);
     }
 
+    /**
+     * Generate pseudo Random World, and set the avatar in the starting room.
+     * @param world
+     */
     public void generateWorld(TETile[][] world) {
         Room startingRoom = randomStartingRoom();
         rooms.add(startingRoom);
+        player = generatePlayer(startingRoom);
         openRandomNumberDoor(startingRoom, 4);
         generateRooms(world, startingRoom);
         for (Room r : rooms) {
             addRoom(world, r);
         }
+        world[player.x][player.y] = player.tile;
     }
+
+    public Player generatePlayer(Room startingRoom) {
+        int x = (startingRoom.topRight.x + startingRoom.bottomLeft.x) / 2;
+        int y = (startingRoom.topRight.y + startingRoom.bottomLeft.y) / 2;
+        return new Player(x, y, Tileset.AVATAR);
+    }
+
 
     public WorldGenerator(int width, int height, long seed) {
         this.width = width;
