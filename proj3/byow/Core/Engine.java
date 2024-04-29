@@ -2,6 +2,7 @@ package byow.Core;
 
 // import afu.org.checkerframework.checker.oigj.qual.World;
 import byow.InputDemo.InputSource;
+import byow.InputDemo.KeyboardInputSource;
 import byow.InputDemo.StringInputDevice;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
@@ -17,6 +18,13 @@ public class Engine {
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+        // 1. new game or load game
+        InputSource inputSource = new KeyboardInputSource();
+
+        // TODO: show the seed on the screen
+        // 2. N12345S
+        // 3. generate world
+        // 4. move avatar
     }
 
     /**
@@ -49,13 +57,8 @@ public class Engine {
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
 
-        // 1. get the seed
-        long seed = Utils.parseTheSeed(input);
-        Game g = new Game(seed);
-
-        // 3. create player
-
-        return finalWorldFrame;
+        InputSource s = new StringInputDevice(input);
+        Game g = new Game(s);
+        return g.world;
     }
-
 }

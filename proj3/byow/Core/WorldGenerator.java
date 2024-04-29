@@ -4,17 +4,27 @@ import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 import edu.princeton.cs.algs4.Queue;
+import static byow.Core.Engine.WIDTH;
+import static byow.Core.Engine.HEIGHT;
 
 import java.util.*;
 
+/**
+ * A class that can generate random world.
+ */
 public class WorldGenerator {
 
+    // World's width
     int width;
+    // World's height
     int height;
+    // Random
     Random random;
+    // A list collect the rooms in the world
     List<Room> rooms;
+    // The player in the starting Room
     Player player;
-    private static final int ROOMSBOUND = 4;
+    private static final int ROOMSBOUND = 60;
     private static final String NORTH = "North";
     private static final String WEST = "West";
     private static final String SOUTH = "South";
@@ -172,6 +182,8 @@ public class WorldGenerator {
         int topRightX = 0, topRightY = 0, bottomLeftX = 0, bottomLeftY = 0, dx, dy;
         Position newOpening = null;
         String newDirection = null;
+
+        // Randomly choose the door position depend on the direction.
         switch (d.direction) {
             case NORTH:
                 newOpening = new Position(d.opening.x, d.opening.y + 1);
@@ -214,8 +226,8 @@ public class WorldGenerator {
         Position bottomLeft = new Position(bottomLeftX, bottomLeftY);
 
         // If the Position is outside the world.
-        if (topRight.checkValid(width, height)
-                || bottomLeft.checkValid(width, height)) {
+        if (topRight.checkValid(WIDTH, HEIGHT)
+                || bottomLeft.checkValid(WIDTH, HEIGHT)) {
             return null;
         }
 
@@ -252,7 +264,7 @@ public class WorldGenerator {
             }
         }
         // outside the world
-        if (x < 0 || y < 0 || x >= width || y >= height) {
+        if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) {
             return false;
         }
 
@@ -276,17 +288,17 @@ public class WorldGenerator {
         return false;
     }
 
-    public void fillBoardWithNothing(TETile[][] tiles) {
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+    private void fillBoardWithNothing(TETile[][] tiles) {
+        for (int x = 0; x < WIDTH; x++) {
+            for (int y = 0; y < HEIGHT; y++) {
                 tiles[x][y] = Tileset.NOTHING;
             }
         }
     }
 
     public Room randomStartingRoom() {
-        int x1 = RandomUtils.uniform(random, width / 2 - width / 10, width / 2);
-        int y1 = RandomUtils.uniform(random, height / 2 - height / 10, height / 2);
+        int x1 = RandomUtils.uniform(random, WIDTH / 2 - WIDTH / 10, WIDTH / 2);
+        int y1 = RandomUtils.uniform(random, HEIGHT / 2 - HEIGHT / 10, HEIGHT / 2);
         int width = RandomUtils.uniform(random, 4, 9);
         int height = RandomUtils.uniform(random, 4, 9);
         Position bottomLeft = new Position(x1, y1);
@@ -294,21 +306,6 @@ public class WorldGenerator {
         return new Room (bottomLeft, topRight);
     }
 
-    /**
-     * Generate pseudo Random World, and set the avatar in the starting room.
-     * @param world
-     */
-    public void generateWorld(TETile[][] world) {
-        Room startingRoom = randomStartingRoom();
-        rooms.add(startingRoom);
-        player = generatePlayer(startingRoom);
-        openRandomNumberDoor(startingRoom, 4);
-        generateRooms(world, startingRoom);
-        for (Room r : rooms) {
-            addRoom(world, r);
-        }
-        world[player.x][player.y] = player.tile;
-    }
 
     public Player generatePlayer(Room startingRoom) {
         int x = (startingRoom.topRight.x + startingRoom.bottomLeft.x) / 2;
@@ -318,9 +315,26 @@ public class WorldGenerator {
 
 
     public WorldGenerator(int width, int height, long seed) {
-        this.width = width;
-        this.height = height;
         this.random = new Random(seed);
         this.rooms = new ArrayList<>();
+    }
+
+    /**
+     * Return pseudo Random World, and set the avatar in the starting room.
+     */
+    public TETile[][] generateWorld() {
+        TETile[][] world = new TETile[WIDTH][HEIGHT];
+        // initialize
+        fillBoardWithNothing(world);
+        Room startingRoom = randomStartingRoom();
+        rooms.add(startingRoom);
+        player = generatePlayer(startingRoom);
+        openRandomNumberDoor(startingRoom, 4);
+        generateRooms(world, startingRoom);
+        for (Room r : rooms) {
+            addRoom(world, r);
+        }
+        world[player.x][player.y] = player.tile;
+        return world;
     }
 }

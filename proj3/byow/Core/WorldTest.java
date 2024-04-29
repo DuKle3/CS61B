@@ -1,48 +1,48 @@
 package byow.Core;
 
 import byow.InputDemo.InputSource;
+import byow.InputDemo.KeyboardInputSource;
 import byow.InputDemo.StringInputDevice;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import static org.junit.Assert.*;
+import static byow.Core.Engine.WIDTH;
+import static byow.Core.Engine.HEIGHT;
+
+import com.sun.tools.internal.ws.wsdl.document.Input;
+import jdk.jshell.execution.Util;
+import org.checkerframework.checker.units.qual.K;
 import org.junit.Test;
 
 public class WorldTest {
-    public static final int WIDTH = 80;
-    public static final int HEIGHT = 30;
 
     public static void main(String[] args) {
+        WorldGenerator wg = new WorldGenerator(50, 50, 123455);
+        WorldGenerator wg2 = new WorldGenerator(50, 50, 432623);
         TERenderer ter = new TERenderer();
-        ter.initialize(WIDTH, HEIGHT);
-
-        TETile[][] world = new TETile[WIDTH][HEIGHT];
-
-        WorldGenerator g = new WorldGenerator(WIDTH, HEIGHT, 13);
-
-        // Initialize world
-        g.fillBoardWithNothing(world);
-
-        // Generate World
-        g.generateWorld(world);
-
+        ter.initialize(100, 50 ,10, 10);
+        TETile[][] world = wg.generateWorld();
+        TETile[][] world2 = wg2.generateWorld();
         ter.renderFrame(world);
+
+        InputSource s = new KeyboardInputSource();
+        while (s.possibleNextInput()) {
+            if (s.getNextKey() == 'N') {
+                ter.renderFrame(world2);
+            }
+        }
     }
 
     @Test
     public void testStringToSeed() {
-        InputSource inputSource = new StringInputDevice("N12345S");
-        long seed = 0;
-        while (inputSource.possibleNextInput()) {
-            char c = Character.toUpperCase(inputSource.getNextKey());
-            if (c == 'N') {
-                continue;
-            }
-            if (c == 'S') {
-                break;
-            }
-            seed = seed * 10 + Character.getNumericValue(c);
-        }
+        long seed = Utils.parseTheSeed(new StringInputDevice("N12345S"));
         assertEquals(seed, 12345);
+    }
+
+    @Test
+    public void testStringToAction() {
+        String actionString = Utils.parseTheAction("N12345Swwaassdd:Q");
+        assertEquals("WWAASSDD:Q", actionString);
     }
 
     @Test
