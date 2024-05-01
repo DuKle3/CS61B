@@ -133,20 +133,18 @@ public class MemoryGame {
 
         // Establish Engine loop
         while (!gameOver) {
-            drawFrame("Round: " + Integer.toString(round));
             playerTurn = false;
+            drawFrame("Round: " + Integer.toString(round));
+            StdDraw.pause(700);
             String ans = generateRandomString(round);
             flashSequence(ans);
             playerTurn = true;
             drawFrame("");
             String playerAns = solicitNCharsInput(round);
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            StdDraw.pause(700);
             if (!playerAns.equals(ans)) {
                 gameOver = true;
+                break;
             }
             round += 1;
         }

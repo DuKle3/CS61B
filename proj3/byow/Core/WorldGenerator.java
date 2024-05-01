@@ -337,4 +337,5 @@ public class WorldGenerator {
         world[player.x][player.y] = player.tile;
         return world;
     }
+
 }

@@ -5,9 +5,9 @@ import byow.InputDemo.KeyboardInputSource;
 import byow.InputDemo.StringInputDevice;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
+
+import static byow.Core.Engine.*;
 import static org.junit.Assert.*;
-import static byow.Core.Engine.WIDTH;
-import static byow.Core.Engine.HEIGHT;
 
 import com.sun.tools.internal.ws.wsdl.document.Input;
 import jdk.jshell.execution.Util;
@@ -17,20 +17,22 @@ import org.junit.Test;
 public class WorldTest {
 
     public static void main(String[] args) {
-        WorldGenerator wg = new WorldGenerator(50, 50, 123455);
-        WorldGenerator wg2 = new WorldGenerator(50, 50, 432623);
-        TERenderer ter = new TERenderer();
-        ter.initialize(100, 50 ,10, 10);
-        TETile[][] world = wg.generateWorld();
-        TETile[][] world2 = wg2.generateWorld();
-        ter.renderFrame(world);
-
-        InputSource s = new KeyboardInputSource();
-        while (s.possibleNextInput()) {
-            if (s.getNextKey() == 'N') {
-                ter.renderFrame(world2);
-            }
+        int type = KEYBOARD;
+        if (type == KEYBOARD) {
+            testInteractWithKeyboard();
+        } else if (type == STRING) {
+            testInteractWithString();
         }
+    }
+
+    public static void testInteractWithKeyboard() {
+        Engine e = new Engine();
+        e.interactWithKeyboard();
+    }
+
+    public static void testInteractWithString() {
+        Engine e = new Engine();
+        e.interactWithInputString("N12345SWWWWWW");
     }
 
     @Test
