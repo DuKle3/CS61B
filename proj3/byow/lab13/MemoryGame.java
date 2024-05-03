@@ -19,16 +19,18 @@ public class MemoryGame {
     private Random rand;
     /** Whether or not the game is over. */
     private boolean gameOver;
-    /** Whether or not it is the player's turn. Used in the last section of the
-     * spec, 'Helpful UI'. */
+    /**
+     * Whether or not it is the player's turn. Used in the last section of the
+     * spec, 'Helpful UI'.
+     */
     private boolean playerTurn;
     /** The characters we generate random Strings from. */
     private static final char[] CHARACTERS = "abcdefghijklmnopqrstuvwxyz".toCharArray();
     /** Encouraging phrases. Used in the last section of the spec, 'Helpful UI'. */
-    private static final String[] ENCOURAGEMENT = {"You can do this!", "I believe in you!",
-                                                   "You got this!", "You're a star!", "Go Bears!",
-                                                   "Too easy for you!", "Wow, so impressive!"};
-    private static final String[] GAMESTATES = {"Watch !", "Typed !"};
+    private static final String[] ENCOURAGEMENT = { "You can do this!", "I believe in you!",
+            "You got this!", "You're a star!", "Go Bears!",
+            "Too easy for you!", "Wow, so impressive!" };
+    private static final String[] GAMESTATES = { "Watch !", "Typed !" };
 
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -42,8 +44,11 @@ public class MemoryGame {
     }
 
     public MemoryGame(int width, int height, long seed) {
-        /* Sets up StdDraw so that it has a width by height grid of 16 by 16 squares as its canvas
-         * Also sets up the scale so the top left is (0,0) and the bottom right is (width, height)
+        /*
+         * Sets up StdDraw so that it has a width by height grid of 16 by 16 squares as
+         * its canvas
+         * Also sets up the scale so the top left is (0,0) and the bottom right is
+         * (width, height)
          */
         this.width = width;
         this.height = height;
@@ -74,13 +79,14 @@ public class MemoryGame {
         StdDraw.clear(Color.BLACK);
         StdDraw.setFont(font);
         StdDraw.setPenColor(Color.WHITE);
-        StdDraw.text( width / 2.0, height / 2.0, s);
+        StdDraw.text(width / 2.0, height / 2.0, s);
 
-        // If game is not over, display relevant game information at the top of the screen
+        // If game is not over, display relevant game information at the top of the
+        // screen
         if (!gameOver) {
             // show the round number
             String displayRound = "Round: " + Integer.toString(round);
-            StdDraw.text( 5, height - 2, displayRound);
+            StdDraw.text(5, height - 2, displayRound);
 
             // Watch ! or Typed !
             String gameState = playerTurn ? GAMESTATES[1] : GAMESTATES[0];
@@ -96,7 +102,8 @@ public class MemoryGame {
     }
 
     public void flashSequence(String letters) {
-        // Display each character in letters, making sure to blank the screen between letters
+        // Display each character in letters, making sure to blank the screen between
+        // letters
         for (int i = 0; i < letters.length(); i++) {
             try {
                 // show the single char for 1 sec.

@@ -50,7 +50,7 @@ public class WorldGenerator {
             }
             for (Door d : r.doors) {
                 if (d.opened) {
-                    tiles[d.opening.x][d.opening.y] = Tileset.UNLOCKED_DOOR;
+                    tiles[d.opening.x][d.opening.y] = Tileset.FLOOR;
                 }
             }
         }

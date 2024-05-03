@@ -20,7 +20,7 @@ public class Engine {
     public static final int KEYBOARD = 1;
     public static final int STRING = 2;
     int inputType;
-    InputSource inputSource;
+    GameState gameState;
     Game game;
 
     private enum GameState {
@@ -30,36 +30,38 @@ public class Engine {
     }
 
     /**
-     * Method used for exploring a fresh world. This method should handle all inputs,
+     * Method used for exploring a fresh world. This method should handle all
+     * inputs,
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
         // 1. new game or load game
         InputSource inputSource = new KeyboardInputSource();
-        this.inputSource = inputSource;
         this.inputType = KEYBOARD;
-        this.ter.initialize(SCREENWIDTH, SCREENHEIGHT);
-        menu();
-        play();
+        play(inputSource);
     }
 
     /**
-     * Method used for autograding and testing your code. The input string will be a series
-     * of characters (for example, "n123sswwdasdassadwas", "n123sss:q", "lwww". The engine should
+     * Method used for autograding and testing your code. The input string will be a
+     * series
+     * of characters (for example, "n123sswwdasdassadwas", "n123sss:q", "lwww". The
+     * engine should
      * behave exactly as if the user typed these characters into the engine using
      * interactWithKeyboard.
      *
-     * Recall that strings ending in ":q" should cause the game to quite save. For example,
-     * if we do interactWithInputString("n123sss:q"), we expect the game to run the first
+     * Recall that strings ending in ":q" should cause the game to quite save. For
+     * example,
+     * if we do interactWithInputString("n123sss:q"), we expect the game to run the
+     * first
      * 7 commands (n123sss) and then quit and save. If we then do
      * interactWithInputString("l"), we should be back in the exact same state.
      *
      * In other words, both of these calls:
-     *   - interactWithInputString("n123sss:q")
-     *   - interactWithInputString("lww")
+     * - interactWithInputString("n123sss:q")
+     * - interactWithInputString("lww")
      *
      * should yield the exact same world state as:
-     *   - interactWithInputString("n123sssww")
+     * - interactWithInputString("n123sssww")
      *
      * @param input the input string to feed to your program
      * @return the 2D TETile[][] representing the state of the world
@@ -70,14 +72,60 @@ public class Engine {
         // world that would have been drawn if the same inputs had been given
         // to interactWithKeyboard().
         //
-        // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
+        // See proj3.byow.InputDemo for a demo of how you can make a nice clean
+        // interface
         // that works for many different input types.
 
-        InputSource s = new StringInputDevice(input);
+        InputSource inputSource = new StringInputDevice(input);
         this.inputType = STRING;
-        this.inputSource = s;
-        play();
-        return this.game.world;
+        return play(inputSource);
+    }
+
+    public TETile[][] play(InputSource inputSource) {
+        if (inputType == KEYBOARD) {
+            ter.initialize(SCREENWIDTH, SCREENHEIGHT);
+            menu();
+        }
+
+        while (inputSource.possibleNextInput()) {
+            Character c = inputSource.getNextKey();
+            switch (c) {
+                case 'N' -> {
+                    // start new
+                    long seed = solicitSeed(inputSource);
+                    this.game = new Game(seed);
+                    if (this.inputType == KEYBOARD) {
+                        ter.renderFrame(game.world);
+                    }
+                }
+                case 'L' -> {
+                    // load
+                    this.game = loadGame();
+                    if (this.inputType == KEYBOARD) {
+                        ter.renderFrame(game.world);
+                    }
+                }
+                case 'Q' -> {
+                    // quit
+                    return null;
+                }
+                case ':' -> {
+                    if (inputSource.getNextKey() == 'Q') {
+                        // save
+                        saveGame();
+                        return game.getWorld();
+                    }
+                }
+                default -> {
+                    // interaction
+                    this.game.interaction(c);
+                    if (this.inputType == KEYBOARD) {
+                        this.ter.renderFrame(game.world);
+                    }
+                }
+            }
+        }
+        return game.getWorld();
     }
 
     public void menu() {
@@ -95,7 +143,7 @@ public class Engine {
         StdDraw.show();
     }
 
-    public long solicitSeed() {
+    public long solicitSeed(InputSource inputSource) {
         if (inputType == KEYBOARD) {
             drawFrame("Enter Seed: ");
         }
@@ -117,56 +165,13 @@ public class Engine {
         return Long.parseLong(typed);
     }
 
-    public TETile[][] play() {
-        while (inputSource.possibleNextInput()) {
-            Character c = inputSource.getNextKey();
-            switch (c) {
-                case 'N' -> {
-                    // start new
-                    long seed = solicitSeed();
-                    this.game = new Game(seed);
-                    if (this.inputType == KEYBOARD) {
-                        this.ter.renderFrame(game.world);
-                    }
-                }
-                case 'L' -> {
-                    // load
-                    Engine lastEngine = new Engine();
-                    this.game = loadGame();
-                    if (this.inputType == KEYBOARD) {
-                        this.ter.renderFrame(game.world);
-                    }
-                }
-                case 'Q' -> {
-                    // quit
-                    return null;
-                }
-                case ':' -> {
-                    if (inputSource.getNextKey() == 'Q') {
-                        // save
-                        saveGame();
-                        return null;
-                    }
-                }
-                default -> {
-                    // interaction
-                    this.game.interaction(c);
-                    if (this.inputType == KEYBOARD) {
-                        this.ter.renderFrame(game.world);
-                    }
-                }
-            }
-        }
-        return game.world;
-    }
-
     public void drawFrame(String s) {
         // Take the string and display it in the center of the screen
         Font font = new Font("JetBrains Mono", Font.BOLD, 30);
         StdDraw.clear(Color.BLACK);
         StdDraw.setFont(font);
         StdDraw.setPenColor(Color.WHITE);
-        StdDraw.text( SCREENWIDTH / 2.0, SCREENHEIGHT / 2.0, s);
+        StdDraw.text(SCREENWIDTH / 2.0, SCREENHEIGHT / 2.0, s);
         StdDraw.text(SCREENWIDTH / 2.0, SCREENHEIGHT / 2.0 - 5, "Start(S)");
 
         StdDraw.show();

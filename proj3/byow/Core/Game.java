@@ -25,7 +25,9 @@ public class Game {
     int gameState;
     Player player;
     long seed;
+    // The display / interaction world.
     TETile[][] world;
+    // This copyWorld save the original world of given seed.
     TETile[][] copyWorld;
 
     // start new
@@ -71,5 +73,9 @@ public class Game {
 
     public boolean isWalkable(int x, int y) {
         return (world[x][y].equals(Tileset.FLOOR) || world[x][y].equals(Tileset.UNLOCKED_DOOR));
+    }
+
+    public TETile[][] getWorld() {
+        return this.world;
     }
 }
