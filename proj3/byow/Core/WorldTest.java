@@ -1,11 +1,8 @@
 package byow.Core;
 
-import byow.InputDemo.StringInputDevice;
 import byow.TileEngine.TETile;
-
-import static org.junit.Assert.*;
-
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class WorldTest {
 

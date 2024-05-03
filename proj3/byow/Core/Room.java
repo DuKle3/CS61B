@@ -9,7 +9,7 @@ public class Room {
     int width;
     int height;
     List<Door> doors;
-    public Room (Position bottomLeft, Position topRight) {
+    public Room(Position bottomLeft, Position topRight) {
         this.topRight = topRight;
         this.bottomLeft = bottomLeft;
         this.width = topRight.x - bottomLeft.x + 1;
@@ -18,7 +18,7 @@ public class Room {
     }
 
     // Return True if Room v and Room u are overlap.
-    public Boolean overLap (Room v) {
+    public Boolean overLap(Room v) {
         // check on the Right
         if (this.bottomLeft.isOnRightOf(v.topRight)) {
             return false;
