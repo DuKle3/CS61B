@@ -75,7 +75,7 @@ public class Engine {
         // interface
         // that works for many different input types.
 
-        InputSource inputSource = new StringInputDevice(input);
+        InputSource inputSource = new StringInputDevice(input.toUpperCase());
         this.inputType = STRING;
         return play(inputSource);
     }

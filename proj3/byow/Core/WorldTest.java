@@ -26,9 +26,8 @@ public class WorldTest {
         Engine g1 = new Engine();
         Engine g2 = new Engine();
 
-        g1.interactWithInputString("N12345SWWAASSDD");
-        g2.interactWithInputString("N12345S:Q");
-        g2.interactWithInputString("LWWAASSDD");
+        g1.interactWithInputString("n7313251667695476404sasdw");
+        g2.interactWithInputString("n7313251667695476404sasdw");
 
         assertEquals(g1.game.getWorld(), g2.game.getWorld());
     }
