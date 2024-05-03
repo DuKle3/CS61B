@@ -17,15 +17,18 @@ import org.junit.Test;
 public class WorldTest {
 
     public static void main(String[] args) {
+        Engine g = new Engine();
+        g.interactWithKeyboard();
     }
 
     @Test
     public void testSameInputWithMovement() {
         Engine g1 = new Engine();
         Engine g2 = new Engine();
-        
+
         g1.interactWithInputString("N12345SWWAASSDD");
-        g2.interactWithInputString("N12345SWWAASSDD");
+        g2.interactWithInputString("N12345S:Q");
+        g2.interactWithInputString("LWWAASSDD");
 
         assertEquals(g1.game.getWorld(), g2.game.getWorld());
     }

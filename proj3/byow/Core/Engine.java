@@ -107,7 +107,7 @@ public class Engine {
                             // load
                             this.game = loadGame();
                             if (this.inputType == KEYBOARD) {
-                                ter.renderFrame(game.world);
+                                ter.renderFrame(game.getWorld());
                             }
                             state = GameState.PLAY;
                         }
@@ -137,7 +137,11 @@ public class Engine {
                 }
             }
         }
-        return game.getWorld();
+
+        if (game != null) {
+            return game.getWorld();
+        }
+        return null;
     }
 
     public void menu() {
