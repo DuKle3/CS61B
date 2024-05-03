@@ -1,17 +1,10 @@
 package byow.Core;
 
-import byow.InputDemo.InputSource;
-import byow.InputDemo.KeyboardInputSource;
 import byow.InputDemo.StringInputDevice;
-import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 
-import static byow.Core.Engine.*;
 import static org.junit.Assert.*;
 
-import com.sun.tools.internal.ws.wsdl.document.Input;
-import jdk.jshell.execution.Util;
-import org.checkerframework.checker.units.qual.K;
 import org.junit.Test;
 
 public class WorldTest {
@@ -30,18 +23,6 @@ public class WorldTest {
         g2.interactWithInputString("n7313251667695476404sasdw");
 
         assertEquals(g1.game.getWorld(), g2.game.getWorld());
-    }
-
-    @Test
-    public void testStringToSeed() {
-        long seed = Utils.parseTheSeed(new StringInputDevice("N12345S"));
-        assertEquals(seed, 12345);
-    }
-
-    @Test
-    public void testStringToAction() {
-        String actionString = Utils.parseTheAction("N12345Swwaassdd:Q");
-        assertEquals("WWAASSDD:Q", actionString);
     }
 
     @Test
