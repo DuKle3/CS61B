@@ -20,7 +20,6 @@ public class Engine {
     public static final int KEYBOARD = 1;
     public static final int STRING = 2;
     int inputType;
-    GameState gameState;
     Game game;
 
     private enum GameState {
@@ -82,45 +81,58 @@ public class Engine {
     }
 
     public TETile[][] play(InputSource inputSource) {
+        GameState state = GameState.MENU;
+
         if (inputType == KEYBOARD) {
             ter.initialize(SCREENWIDTH, SCREENHEIGHT);
             menu();
         }
 
+
         while (inputSource.possibleNextInput()) {
             Character c = inputSource.getNextKey();
-            switch (c) {
-                case 'N' -> {
-                    // start new
-                    long seed = solicitSeed(inputSource);
-                    this.game = new Game(seed);
-                    if (this.inputType == KEYBOARD) {
-                        ter.renderFrame(game.world);
+            switch (state) {
+                case MENU -> {
+                    switch (c) {
+                        case 'N' -> {
+                            // start new
+                            long seed = solicitSeed(inputSource);
+                            this.game = new Game(seed);
+                            if (inputType == KEYBOARD) {
+                                ter.renderFrame(game.getWorld());
+                            }
+                            state = GameState.PLAY;
+                        }
+                        case 'L' -> {
+                            // load
+                            this.game = loadGame();
+                            if (this.inputType == KEYBOARD) {
+                                ter.renderFrame(game.world);
+                            }
+                            state = GameState.PLAY;
+                        }
+                        case 'Q' -> {
+                            // quit
+                            return null;
+                        }
                     }
                 }
-                case 'L' -> {
-                    // load
-                    this.game = loadGame();
-                    if (this.inputType == KEYBOARD) {
-                        ter.renderFrame(game.world);
-                    }
-                }
-                case 'Q' -> {
-                    // quit
-                    return null;
-                }
-                case ':' -> {
-                    if (inputSource.getNextKey() == 'Q') {
-                        // save
-                        saveGame();
-                        return game.getWorld();
-                    }
-                }
-                default -> {
-                    // interaction
-                    this.game.interaction(c);
-                    if (this.inputType == KEYBOARD) {
-                        this.ter.renderFrame(game.world);
+                case PLAY -> {
+                    switch (c) {
+                        case ':' -> {
+                            if (inputSource.getNextKey() == 'Q') {
+                                // save
+                                saveGame();
+                                return game.getWorld();
+                            }
+                        }
+                        default -> {
+                            // interaction
+                            game.interaction(c);
+                            if (inputType == KEYBOARD) {
+                                ter.renderFrame(game.getWorld());
+                            }
+                        }
                     }
                 }
             }

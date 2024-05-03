@@ -17,22 +17,17 @@ import org.junit.Test;
 public class WorldTest {
 
     public static void main(String[] args) {
-        int type = KEYBOARD;
-        if (type == KEYBOARD) {
-            testInteractWithKeyboard();
-        } else if (type == STRING) {
-            testInteractWithString();
-        }
     }
 
-    public static void testInteractWithKeyboard() {
-        Engine e = new Engine();
-        e.interactWithKeyboard();
-    }
+    @Test
+    public void testSameInputWithMovement() {
+        Engine g1 = new Engine();
+        Engine g2 = new Engine();
+        
+        g1.interactWithInputString("N12345SWWAASSDD");
+        g2.interactWithInputString("N12345SWWAASSDD");
 
-    public static void testInteractWithString() {
-        Engine e = new Engine();
-        e.interactWithInputString("N12345SWWWWWW");
+        assertEquals(g1.game.getWorld(), g2.game.getWorld());
     }
 
     @Test
