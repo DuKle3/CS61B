@@ -7,7 +7,9 @@ import edu.princeton.cs.algs4.Queue;
 import static byow.Core.Engine.WIDTH;
 import static byow.Core.Engine.HEIGHT;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 /**
  * A class that can generate random world.
@@ -24,7 +26,8 @@ public class WorldGenerator {
     List<Room> rooms;
     // The player in the starting Room
     Player player;
-    private static final int ROOMSBOUND = 60;
+    Player enemy;
+    private static final int ROOMSBOUND = 40;
     private static final String NORTH = "North";
     private static final String WEST = "West";
     private static final String SOUTH = "South";
@@ -51,6 +54,9 @@ public class WorldGenerator {
             for (Door d : r.doors) {
                 if (d.opened) {
                     tiles[d.opening.x][d.opening.y] = Tileset.FLOOR;
+                    if (r.isRoom) {
+                        tiles[d.opening.x][d.opening.y] = Tileset.UNLOCKED_DOOR;
+                    }
                 }
             }
         }
@@ -226,12 +232,12 @@ public class WorldGenerator {
         Position bottomLeft = new Position(bottomLeftX, bottomLeftY);
 
         // If the Position is outside the world.
-        if (topRight.checkValid(WIDTH, HEIGHT)
-                || bottomLeft.checkValid(WIDTH, HEIGHT)) {
+        if (!topRight.checkValid(WIDTH, HEIGHT)
+                || !bottomLeft.checkValid(WIDTH, HEIGHT)) {
             return null;
         }
 
-        Room newRoom = new Room(bottomLeft, topRight);
+        Room newRoom = new Room(bottomLeft, topRight, isRoom);
         Door newDoor = new Door(newOpening, newDirection);
 
         // open the door to the newRoom.
@@ -303,14 +309,35 @@ public class WorldGenerator {
         int height = RandomUtils.uniform(random, 4, 9);
         Position bottomLeft = new Position(x1, y1);
         Position topRight = new Position(x1 + width, y1 + height);
-        return new Room (bottomLeft, topRight);
+        return new Room (bottomLeft, topRight, true);
+    }
+
+    public void addLightSource(TETile[][] tiles, Room r) {
+        int dx = RandomUtils.uniform(random, 1, r.width - 1);
+        int dy = RandomUtils.uniform(random, 1, r.height - 1);
+        int x = r.bottomLeft.x + dx;
+        int y = r.bottomLeft.y + dy;
+        tiles[x][y] = Tileset.LIGHTOFF;
+
+        r.light = new Position(x, y);
     }
 
 
-    public Player generatePlayer(Room startingRoom) {
+    public Player generatePlayer(Room startingRoom, TETile avatar) {
         int x = (startingRoom.topRight.x + startingRoom.bottomLeft.x) / 2;
         int y = (startingRoom.topRight.y + startingRoom.bottomLeft.y) / 2;
-        return new Player(x, y, Tileset.AVATAR);
+        return new Player(x, y, avatar);
+    }
+
+    public Player generateEnemy(Room startingRoom, TETile enemy) {
+        int index = RandomUtils.uniform(random, rooms.size());
+        Room enemyRoom = rooms.get(index);
+        while (startingRoom.equals(enemyRoom)) {
+            enemyRoom = rooms.get(RandomUtils.uniform(random, rooms.size()));
+        }
+        int x = (enemyRoom.topRight.x + enemyRoom.bottomLeft.x) / 2;
+        int y = (enemyRoom.topRight.y + enemyRoom.bottomLeft.y) / 2;
+        return new Player(x, y, enemy);
     }
 
 
@@ -326,15 +353,33 @@ public class WorldGenerator {
         TETile[][] world = new TETile[WIDTH][HEIGHT];
         // initialize
         fillBoardWithNothing(world);
+
+        // generate starting room
         Room startingRoom = randomStartingRoom();
         rooms.add(startingRoom);
-        player = generatePlayer(startingRoom);
+
+        // generate player
+        player = generatePlayer(startingRoom, Tileset.AVATAR1);
+
+
+        // generate world
         openRandomNumberDoor(startingRoom, 4);
         generateRooms(world, startingRoom);
         for (Room r : rooms) {
             addRoom(world, r);
         }
-        world[player.x][player.y] = player.tile;
+
+        // generate enemy
+        enemy = generateEnemy(startingRoom, Tileset.ENEMY);
+
+        // world[player.x][player.y] = player.tile;
+
+        // add light sources for each room.
+        for (Room r : rooms) {
+            if (r.isRoom) {
+                addLightSource(world, r);
+            }
+        }
         return world;
     }
 

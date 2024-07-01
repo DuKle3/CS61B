@@ -1,14 +1,15 @@
 package byow.Core;
 
 import byow.TileEngine.TETile;
+import edu.princeton.cs.introcs.StdDraw;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class WorldTest {
 
     public static void main(String[] args) {
-        Engine g = new Engine();
-        g.interactWithKeyboard();
+        Engine g1 = new Engine();
+        g1.interactWithKeyboard();
     }
 
     @Test
